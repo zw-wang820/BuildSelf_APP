@@ -1,0 +1,143 @@
+import 'package:flutter/material.dart';
+import 'package:buildself/core/constants/colors.dart';
+import 'package:buildself/core/constants/strings.dart';
+import 'package:buildself/data/models/work_note_model.dart';
+import 'package:buildself/data/repositories/work_repository.dart';
+import 'package:buildself/shared/widgets/empty_state.dart';
+import 'package:buildself/shared/widgets/tag_chip.dart';
+
+/// 工作记录详情页
+class WorkDetailScreen extends StatefulWidget {
+  final String? noteId;
+
+  const WorkDetailScreen({Key? key, this.noteId}) : super(key: key);
+
+  @override
+  State<WorkDetailScreen> createState() => _WorkDetailScreenState();
+}
+
+class _WorkDetailScreenState extends State<WorkDetailScreen> {
+  final WorkRepository _repo = WorkRepository();
+  WorkNote? _note;
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadNote();
+  }
+
+  Future<void> _loadNote() async {
+    if (widget.noteId == null) {
+      setState(() => _loading = false);
+      return;
+    }
+    _note = await _repo.getById(widget.noteId!);
+    if (mounted) setState(() => _loading = false);
+  }
+
+  Future<void> _delete() async {
+    if (_note == null) return;
+    await _repo.softDelete(_note!.id);
+    if (mounted) {
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text(AppStrings.deleteSuccess)));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text(AppStrings.workTitle),
+        actions: [
+          if (_note != null)
+            IconButton(
+              icon: const Icon(Icons.edit_outlined),
+              onPressed: () async {
+                await Navigator.pushNamed(context, '/work/edit', arguments: WorkEditArgs(note: _note));
+                _loadNote();
+              },
+            ),
+          if (_note != null)
+            PopupMenuButton<String>(
+              onSelected: (value) {
+                if (value == 'delete') _showDeleteDialog(context);
+              },
+              itemBuilder: (context) => [const PopupMenuItem(value: 'delete', child: Text(AppStrings.delete))],
+            ),
+        ],
+      ),
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : _note == null
+              ? const EmptyState(message: '记录不存在')
+              : _buildContent(),
+    );
+  }
+
+  Widget _buildContent() {
+    final note = _note!;
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          decoration: BoxDecoration(
+            color: AppColors.work.withOpacity(0.15),
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: Text(note.recordType,
+              style: const TextStyle(fontSize: 12, color: AppColors.work, fontWeight: FontWeight.w600)),
+        ),
+        const SizedBox(height: 12),
+        if (note.title.isNotEmpty)
+          Text(note.title, style: Theme.of(context).textTheme.headlineMedium),
+        const SizedBox(height: 8),
+        Row(children: [
+          Text(_formatDate(note.createdAt), style: TextStyle(fontSize: 12, color: AppColors.textSecondaryDark)),
+          if (note.mood != null) ...[
+            const SizedBox(width: 12),
+            Text(note.mood!.emoji, style: const TextStyle(fontSize: 16)),
+          ],
+        ]),
+        const SizedBox(height: 16),
+        const Divider(),
+        const SizedBox(height: 16),
+        Text(note.content, style: const TextStyle(fontSize: 15, height: 1.8)),
+        if (note.tags.isNotEmpty) ...[
+          const SizedBox(height: 24),
+          Wrap(spacing: 8, runSpacing: 8, children: note.tags.map((tag) => TagChip(label: tag)).toList()),
+        ],
+      ]),
+    );
+  }
+
+  String _formatDate(DateTime date) =>
+      '${date.year}/${date.month.toString().padLeft(2, '0')}/${date.day.toString().padLeft(2, '0')} '
+      '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+
+  void _showDeleteDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('删除记录'),
+        content: const Text('确定删除这条记录吗？删除后可在回收站恢复，30天后永久清除。'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text(AppStrings.cancel)),
+          TextButton(
+            onPressed: () { Navigator.pop(context); _delete(); },
+            style: TextButton.styleFrom(foregroundColor: AppColors.error),
+            child: const Text(AppStrings.delete),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 编辑页参数
+class WorkEditArgs {
+  final WorkNote? note;
+  WorkEditArgs({this.note});
+}

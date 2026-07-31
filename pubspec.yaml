@@ -1,0 +1,53 @@
+name: buildself
+description: Buildself — 个人成长记录应用
+
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ">=2.17.0 <3.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.2
+
+  # 数据库 & 存储
+  sqflite: ^2.0.3
+  path: ^1.8.1
+  path_provider: ^2.0.14
+  shared_preferences: ^2.0.20
+
+  # 状态管理
+  provider: ^6.0.5
+
+  # 工具
+  uuid: ^3.0.7
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.0
+  flutter_launcher_icons: ^0.13.1
+
+flutter:
+  uses-material-design: true
+
+  # assets:
+  #   - assets/images/
+  #   - assets/icons/
+  #   - assets/animations/
+
+  # fonts:
+  #   - family: NotoSansSC
+  #     fonts:
+  #       - asset: fonts/NotoSansSC-Regular.otf
+  #       - asset: fonts/NotoSansSC-Bold.otf
+  #         weight: 700
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "Hero Illustration.png"
+  min_sdk_android: 21

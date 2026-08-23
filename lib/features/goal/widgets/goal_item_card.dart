@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:buildself/core/constants/colors.dart';
 import 'package:buildself/data/models/enums.dart';
 import 'package:buildself/data/models/goal_model.dart';
+import 'package:buildself/shared/widgets/emoji_icon.dart';
 
 /// 目标列表项 — 类型徽章 + 截止时间 + 奖励 + 进度条(可入场动画) + 里程碑
 ///
@@ -139,8 +140,7 @@ class _GoalItemCardState extends State<GoalItemCard>
                       const Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.check_circle,
-                              size: 14, color: AppColors.success),
+                          EmojiIcon('✅', size: 13),
                           SizedBox(width: 3),
                           Text(
                             '已完成',
@@ -289,11 +289,7 @@ class _GoalItemCardState extends State<GoalItemCard>
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(
-          overdue ? Icons.error_outline : Icons.schedule,
-          size: 13,
-          color: color,
-        ),
+        EmojiIcon(overdue ? '⏰' : '⏰', size: 12),
         const SizedBox(width: 3),
         Text(
           overdue
@@ -315,11 +311,13 @@ class _GoalItemCardState extends State<GoalItemCard>
       padding: const EdgeInsets.only(bottom: 6),
       child: Row(
         children: [
-          Icon(
-            m.isCompleted ? Icons.check_circle : Icons.radio_button_unchecked,
-            size: 16,
-            color: m.isCompleted ? AppColors.success : AppColors.textSecondary(context),
-          ),
+          m.isCompleted
+              ? const EmojiIcon('✅', size: 14)
+              : Icon(
+                  Icons.radio_button_unchecked,
+                  size: 15,
+                  color: AppColors.textSecondary(context),
+                ),
           const SizedBox(width: 8),
           Expanded(
             child: Text(

@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:buildself/core/constants/colors.dart';
+import 'package:buildself/shared/widgets/emoji_icon.dart';
 
 /// 数据统计页
 class StatisticsScreen extends StatelessWidget {
@@ -45,8 +46,7 @@ class StatisticsScreen extends StatelessWidget {
               padding: const EdgeInsets.all(22),
               child: Row(
                 children: [
-                  const Icon(Icons.timer_outlined,
-                      color: Colors.white, size: 30),
+                  const EmojiIcon('🍅', size: 28),
                   const SizedBox(width: 14),
                   Expanded(
                     child: Column(
@@ -217,7 +217,7 @@ class StatisticsScreen extends StatelessWidget {
               color: t.color.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(_trendIcon(t.label), color: t.color, size: 18),
+            child: Center(child: EmojiIcon(_trendIcon(t.label), size: 17)),
           ),
           const SizedBox(width: 12),
           SizedBox(
@@ -246,16 +246,16 @@ class StatisticsScreen extends StatelessWidget {
     );
   }
 
-  IconData _trendIcon(String label) {
+  String _trendIcon(String label) {
     switch (label) {
       case '工作':
-        return Icons.work_outline;
+        return '💼';
       case '生活':
-        return Icons.local_cafe_outlined;
+        return '🌿';
       case '阅读':
-        return Icons.menu_book_outlined;
+        return '📖';
       default:
-        return Icons.flag_outlined;
+        return '🎯';
     }
   }
 }

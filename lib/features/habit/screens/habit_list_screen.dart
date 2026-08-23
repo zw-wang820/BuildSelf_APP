@@ -7,6 +7,7 @@ import 'package:buildself/features/habit/models/habit_model.dart';
 import 'package:buildself/features/habit/widgets/add_habit_sheet.dart';
 import 'package:buildself/features/habit/widgets/celebration_overlay.dart';
 import 'package:buildself/features/habit/widgets/habit_item_card.dart';
+import 'package:buildself/shared/widgets/emoji_icon.dart';
 import 'package:buildself/shared/widgets/toast.dart';
 
 /// 习惯列表页 — 统计概览 + 筛选标签 + 卡片列表 + 新建
@@ -134,7 +135,7 @@ class _HabitListScreenState extends State<HabitListScreen> {
         onPressed: _openAdd,
         backgroundColor: AppColors.habit,
         foregroundColor: Colors.white,
-        child: const Icon(Icons.add),
+        child: const EmojiIcon('➕', size: 22),
       ),
     );
   }
@@ -226,7 +227,7 @@ class _HabitListScreenState extends State<HabitListScreen> {
             const SizedBox(height: 24),
             OutlinedButton.icon(
               onPressed: _openAdd,
-              icon: const Icon(Icons.add),
+              icon: const EmojiIcon('➕', size: 18),
               label: const Text('新建习惯'),
             ),
           ],

@@ -4,6 +4,7 @@ import 'package:buildself/core/constants/colors.dart';
 import 'package:buildself/core/constants/strings.dart';
 import 'package:buildself/core/router/routes.dart';
 import 'package:buildself/shared/widgets/app_card.dart';
+import 'package:buildself/shared/widgets/emoji_icon.dart';
 import 'package:buildself/shared/widgets/nexus_background.dart';
 import 'package:buildself/features/auth/providers/app_provider.dart';
 import 'package:buildself/data/repositories/goal_repository.dart';
@@ -268,8 +269,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             IconButton(
-              icon: const Icon(Icons.search_outlined, size: 22),
-              color: AppColors.primary,
+              icon: const EmojiIcon('🔍', size: 21),
               onPressed: () =>
                   Navigator.pushNamed(context, AppRoutes.search),
             ),
@@ -400,22 +400,22 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildQuickRecords(BuildContext context) {
     final entries = [
       _QuickEntry(
-          icon: Icons.event_outlined,
+          emoji: '💼',
           label: AppStrings.tabWork,
           color: AppColors.work,
           route: AppRoutes.workEdit),
       _QuickEntry(
-          icon: Icons.local_cafe_outlined,
+          emoji: '🌿',
           label: AppStrings.tabLife,
           color: AppColors.life,
           route: AppRoutes.lifeEdit),
       _QuickEntry(
-          icon: Icons.menu_book_outlined,
+          emoji: '📖',
           label: AppStrings.tabReading,
           color: AppColors.reading,
           route: AppRoutes.bookshelf),
       _QuickEntry(
-          icon: Icons.auto_awesome,
+          emoji: '✨',
           label: AppStrings.murmurTitle,
           color: AppColors.murmur,
           route: AppRoutes.murmur),
@@ -440,7 +440,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       color: e.color.withValues(alpha: 0.14),
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(e.icon, color: e.color, size: 22),
+                    child: Center(child: EmojiIcon(e.emoji, size: 24)),
                   ),
                   const SizedBox(height: 10),
                   Text(
@@ -467,7 +467,7 @@ class _HomeScreenState extends State<HomeScreen> {
       children: [
         _buildSectionHeader(
           context,
-          icon: Icons.checklist_outlined,
+          emoji: '📋',
           label: '今日待办',
           accent: AppColors.todo,
           actionLabel: '查看全部',
@@ -497,7 +497,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
     if (_todos.isEmpty) {
       return _buildEmptyState(
-        icon: Icons.checklist_outlined,
+        emoji: '📋',
         color: AppColors.todo,
         text: '今日还没有待办',
         hint: '去待办清单添加，开始清空列表',
@@ -567,7 +567,7 @@ class _HomeScreenState extends State<HomeScreen> {
       children: [
         _buildSectionHeader(
           context,
-          icon: Icons.gps_fixed,
+          emoji: '🎯',
           label: AppStrings.activeGoals,
           accent: AppColors.goal,
           actionLabel: '全部目标',
@@ -597,7 +597,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     if (_activeGoals.isEmpty) {
       return _buildEmptyState(
-        icon: Icons.gps_fixed,
+        emoji: '🎯',
         color: AppColors.goal,
         text: '还没有进行中的目标',
         hint: '添加目标，开始你的成长之旅',
@@ -701,7 +701,7 @@ class _HomeScreenState extends State<HomeScreen> {
       children: [
         _buildSectionHeader(
           context,
-          icon: Icons.menu_book_outlined,
+          emoji: '📚',
           label: '正在阅读',
           accent: AppColors.reading,
           actionLabel: '查看全部',
@@ -731,7 +731,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     if (_readingBooks.isEmpty) {
       return _buildEmptyState(
-        icon: Icons.menu_book_outlined,
+        emoji: '📚',
         color: AppColors.reading,
         text: '还没有在读的书',
         hint: '去书架添加一本正在读的书',
@@ -762,7 +762,7 @@ class _HomeScreenState extends State<HomeScreen> {
             gradient: gradient,
             borderRadius: BorderRadius.circular(6),
           ),
-          child: const Icon(Icons.menu_book, color: Colors.white, size: 20),
+          child: const Center(child: EmojiIcon('📚', size: 18)),
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -803,7 +803,7 @@ class _HomeScreenState extends State<HomeScreen> {
       children: [
         _buildSectionHeader(
           context,
-          icon: Icons.auto_awesome,
+          emoji: '🔄',
           label: '今日复盘',
           accent: AppColors.accent,
           actionLabel: '开始复盘',
@@ -822,7 +822,7 @@ class _HomeScreenState extends State<HomeScreen> {
   /// 今日复盘内容 — 数据模型未建，先以空态呈现
   Widget _buildReviewContent() {
     return _buildEmptyState(
-      icon: Icons.auto_awesome,
+      emoji: '🔄',
       color: AppColors.accent,
       text: '今日还没有复盘',
       hint: '回顾今天的成长与反思',
@@ -831,7 +831,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   /// 通用空态 — 图标 + 标题 + 提示
   Widget _buildEmptyState({
-    required IconData icon,
+    required String emoji,
     required Color color,
     required String text,
     required String hint,
@@ -847,7 +847,7 @@ class _HomeScreenState extends State<HomeScreen> {
               color: color.withValues(alpha: 0.12),
               shape: BoxShape.circle,
             ),
-            child: Icon(icon, color: color, size: 20),
+            child: Center(child: EmojiIcon(emoji, size: 20)),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -881,7 +881,7 @@ class _HomeScreenState extends State<HomeScreen> {
   /// 区块标题
   Widget _buildSectionHeader(
     BuildContext context, {
-    required IconData icon,
+    required String emoji,
     required String label,
     required Color accent,
     String? actionLabel,
@@ -896,7 +896,7 @@ class _HomeScreenState extends State<HomeScreen> {
             color: accent.withValues(alpha: 0.14),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(icon, size: 16, color: accent),
+          child: Center(child: EmojiIcon(emoji, size: 14)),
         ),
         const SizedBox(width: 10),
         Text(
@@ -939,13 +939,13 @@ class _HomeScreenState extends State<HomeScreen> {
 }
 
 class _QuickEntry {
-  final IconData icon;
+  final String emoji;
   final String label;
   final Color color;
   final String route;
 
   _QuickEntry(
-      {required this.icon,
+      {required this.emoji,
       required this.label,
       required this.color,
       required this.route});

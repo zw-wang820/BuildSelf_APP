@@ -6,6 +6,7 @@ import 'package:buildself/data/database/tables.dart';
 import 'package:buildself/data/database/database_provider.dart';
 import 'package:buildself/features/auth/providers/app_provider.dart';
 import 'package:buildself/shared/widgets/app_card.dart';
+import 'package:buildself/shared/widgets/emoji_icon.dart';
 import 'package:buildself/shared/widgets/nexus_background.dart';
 
 /// 回收站页 — NEXUS 数据回收终端
@@ -223,7 +224,7 @@ class _TrashScreenState extends State<TrashScreen> {
                 border: Border.all(color: AppColors.error.withOpacity(0.4), width: 1),
                 color: AppColors.error.withOpacity(0.06),
               ),
-              child: const Icon(Icons.delete_outline, size: 36, color: AppColors.error),
+              child: const EmojiIcon('🗑️', size: 36),
             ),
             const SizedBox(height: 16),
             Text('回收站为空',
@@ -298,7 +299,7 @@ class _TrashScreenState extends State<TrashScreen> {
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: () => _restore(item),
-                    icon: const Icon(Icons.restore, size: 16),
+                    icon: const EmojiIcon('↺', size: 16),
                     label: const Text('恢复', style: TextStyle(fontSize: 13, letterSpacing: 0.5)),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppColors.accent,
@@ -312,7 +313,7 @@ class _TrashScreenState extends State<TrashScreen> {
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: () => _permanentDelete(item),
-                    icon: const Icon(Icons.delete_forever, size: 16),
+                    icon: const EmojiIcon('🗑️', size: 16),
                     label: const Text('永久删除', style: TextStyle(fontSize: 13, letterSpacing: 0.5)),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppColors.error,

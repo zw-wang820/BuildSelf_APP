@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:buildself/core/constants/colors.dart';
+import 'package:buildself/shared/widgets/emoji_icon.dart';
 
 /// 成就徽章页
 class AchievementsScreen extends StatelessWidget {
@@ -10,25 +11,25 @@ class AchievementsScreen extends StatelessWidget {
 
   // 已解锁（level: 3金 / 2银 / 1铜）
   static const List<_Badge> _unlocked = [
-    _Badge('初次记录', Icons.edit_note, 3, null),
-    _Badge('连续7天', Icons.local_fire_department, 3, null),
-    _Badge('阅读10本', Icons.menu_book, 2, null),
-    _Badge('完成首目标', Icons.flag, 2, null),
-    _Badge('专注100h', Icons.timer, 2, null),
-    _Badge('生活30天', Icons.local_cafe, 1, null),
-    _Badge('碎碎念50', Icons.chat_bubble, 1, null),
-    _Badge('早起达人', Icons.wb_sunny, 1, null),
-    _Badge('周末不荒废', Icons.weekend, 1, null),
+    _Badge('初次记录', '📝', 3, null),
+    _Badge('连续7天', '🔥', 3, null),
+    _Badge('阅读10本', '📚', 2, null),
+    _Badge('完成首目标', '🎯', 2, null),
+    _Badge('专注100h', '🍅', 2, null),
+    _Badge('生活30天', '🌿', 1, null),
+    _Badge('碎碎念50', '💡', 1, null),
+    _Badge('早起达人', '🌅', 1, null),
+    _Badge('周末不荒废', '✨', 1, null),
   ];
 
   // 未解锁
   static const List<_Badge> _locked = [
-    _Badge('连续30天', Icons.local_fire_department, 0, '连续记录满 30 天'),
-    _Badge('阅读50本', Icons.menu_book, 0, '累计读完 50 本书'),
-    _Badge('专注500h', Icons.timer, 0, '累计专注 500 小时'),
-    _Badge('目标达人', Icons.emoji_events, 0, '同时推进 5 个目标'),
-    _Badge('百日成长', Icons.auto_awesome, 0, '坚持成长 100 天'),
-    _Badge('分享达人', Icons.share, 0, '分享 10 篇记录'),
+    _Badge('连续30天', '🔥', 0, '连续记录满 30 天'),
+    _Badge('阅读50本', '📚', 0, '累计读完 50 本书'),
+    _Badge('专注500h', '🍅', 0, '累计专注 500 小时'),
+    _Badge('目标达人', '🏆', 0, '同时推进 5 个目标'),
+    _Badge('百日成长', '🚀', 0, '坚持成长 100 天'),
+    _Badge('分享达人', '📤', 0, '分享 10 篇记录'),
   ];
 
   @override
@@ -143,11 +144,13 @@ class AchievementsScreen extends StatelessWidget {
               width: 2,
             ),
           ),
-          child: Icon(
-            unlocked ? b.icon : Icons.lock_outline,
-            color: unlocked ? color : AppColors.placeholderDark,
-            size: 28,
-          ),
+          child: unlocked
+              ? Center(child: EmojiIcon(b.icon, size: 26))
+              : Icon(
+                  Icons.lock_outline,
+                  color: AppColors.placeholderDark,
+                  size: 26,
+                ),
         ),
         const SizedBox(height: 8),
         Text(
@@ -192,7 +195,7 @@ class AchievementsScreen extends StatelessWidget {
 
 class _Badge {
   final String name;
-  final IconData icon;
+  final String icon;
   final int level; // 0 未解锁 / 1 铜 / 2 银 / 3 金
   final String? condition;
   const _Badge(this.name, this.icon, this.level, this.condition);

@@ -6,6 +6,7 @@ import 'package:buildself/features/todo/data/todo_repository.dart';
 import 'package:buildself/features/todo/models/todo_model.dart';
 import 'package:buildself/features/todo/widgets/add_todo_sheet.dart';
 import 'package:buildself/features/todo/widgets/todo_item_card.dart';
+import 'package:buildself/shared/widgets/emoji_icon.dart';
 import 'package:buildself/shared/widgets/nexus_background.dart';
 import 'package:buildself/shared/widgets/toast.dart';
 
@@ -169,7 +170,7 @@ class _TodoListScreenState extends State<TodoListScreen> {
         onPressed: _openAddSheet,
         backgroundColor: AppColors.todo,
         foregroundColor: Colors.white,
-        child: const Icon(Icons.add),
+        child: const EmojiIcon('➕', size: 22),
       ),
     );
   }
@@ -256,10 +257,8 @@ class _TodoListScreenState extends State<TodoListScreen> {
               color: accent.withValues(alpha: 0.12),
               shape: BoxShape.circle,
             ),
-            child: Icon(
-              isCompleted ? Icons.task_alt : Icons.checklist_outlined,
-              color: accent,
-              size: 30,
+            child: Center(
+              child: EmojiIcon(isCompleted ? '✅' : '📋', size: 30),
             ),
           ),
           const SizedBox(height: 14),

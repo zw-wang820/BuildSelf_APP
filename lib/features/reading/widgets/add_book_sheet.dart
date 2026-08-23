@@ -4,6 +4,7 @@ import 'package:buildself/core/constants/colors.dart';
 import 'package:buildself/data/models/enums.dart';
 import 'package:buildself/data/models/reading_models.dart';
 import 'package:buildself/data/repositories/reading_repository.dart';
+import 'package:buildself/shared/widgets/emoji_icon.dart';
 import 'package:buildself/shared/widgets/gradient_button.dart';
 import 'package:buildself/shared/widgets/toast.dart';
 
@@ -290,8 +291,7 @@ class _AddBookSheetState extends State<_AddBookSheet> {
                             : null,
                       ),
                       child: selected
-                          ? const Icon(Icons.check,
-                              size: 16, color: Colors.white)
+                          ? const Center(child: EmojiIcon('✅', size: 15))
                           : null,
                     ),
                   );

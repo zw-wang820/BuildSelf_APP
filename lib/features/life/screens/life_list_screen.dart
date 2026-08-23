@@ -8,6 +8,7 @@ import 'package:buildself/data/repositories/life_repository.dart';
 import 'package:buildself/features/auth/providers/app_provider.dart';
 import 'package:buildself/shared/layouts/main_scaffold.dart';
 import 'package:buildself/shared/widgets/app_card.dart';
+import 'package:buildself/shared/widgets/emoji_icon.dart';
 import 'package:buildself/shared/widgets/empty_state.dart';
 import 'package:buildself/shared/widgets/nexus_background.dart';
 
@@ -55,7 +56,7 @@ class _LifeListScreenState extends State<LifeListScreen> {
         title: Text(AppStrings.lifeTitle),
         actions: [
           IconButton(
-            icon: const Icon(Icons.search),
+            icon: const EmojiIcon('🔍', size: 21),
             onPressed: () => _showSearch(context),
           ),
         ],
@@ -87,7 +88,7 @@ class _LifeListScreenState extends State<LifeListScreen> {
         },
         backgroundColor: AppColors.life,
         foregroundColor: AppColors.spaceDeep,
-        child: const Icon(Icons.add),
+        child: const EmojiIcon('➕', size: 22),
       ),
       floatingActionButtonLocation: const FloatingAboveNavLocation(),
     );
@@ -133,7 +134,7 @@ class _LifeListScreenState extends State<LifeListScreen> {
   Widget _buildListView() {
     if (_records.isEmpty) {
       return EmptyState(
-        icon: Icons.local_cafe_outlined,
+        emoji: '🌿',
         message: '还没有生活记录\n记录下生活中的美好瞬间',
         onAction: () async {
           await Navigator.pushNamed(context, AppRoutes.lifeEdit);

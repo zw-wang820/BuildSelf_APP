@@ -4,6 +4,7 @@ import 'package:buildself/core/constants/colors.dart';
 import 'package:buildself/core/constants/strings.dart';
 import 'package:buildself/core/router/routes.dart';
 import 'package:buildself/features/auth/providers/app_provider.dart';
+import 'package:buildself/shared/widgets/emoji_icon.dart';
 
 /// 个人中心 — 枢纽页
 ///
@@ -24,35 +25,35 @@ class ProfileCenterScreen extends StatelessWidget {
 
     final items = [
       _MenuItem(
-        icon: Icons.person_outline,
+        emoji: '👤',
         label: '个人资料',
         sub: '查看与管理你的档案',
         color: AppColors.primary,
         route: AppRoutes.profile,
       ),
       _MenuItem(
-        icon: Icons.bar_chart_outlined,
+        emoji: '📊',
         label: '数据统计',
         sub: '专注时长与成长趋势',
         color: AppColors.work,
         route: AppRoutes.statistics,
       ),
       _MenuItem(
-        icon: Icons.emoji_events_outlined,
+        emoji: '🏆',
         label: '成就徽章',
         sub: '已解锁 9 / 15 枚',
         color: AppColors.warning,
         route: AppRoutes.achievements,
       ),
       _MenuItem(
-        icon: Icons.cloud_sync_outlined,
+        emoji: '📥',
         label: '数据备份',
         sub: '云端同步与本地管理',
         color: AppColors.life,
         route: AppRoutes.backup,
       ),
       _MenuItem(
-        icon: Icons.settings_outlined,
+        emoji: '⚙️',
         label: '设置',
         sub: '外观 · 通知 · 隐私',
         color: AppColors.reading,
@@ -203,7 +204,7 @@ class ProfileCenterScreen extends StatelessWidget {
                     color: e.color.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Icon(e.icon, color: e.color, size: 22),
+                  child: Center(child: EmojiIcon(e.emoji, size: 22)),
                 ),
                 const SizedBox(width: 14),
                 Expanded(
@@ -269,14 +270,14 @@ class ProfileCenterScreen extends StatelessWidget {
 }
 
 class _MenuItem {
-  final IconData icon;
+  final String emoji;
   final String label;
   final String sub;
   final Color color;
   final String route;
 
   _MenuItem({
-    required this.icon,
+    required this.emoji,
     required this.label,
     required this.sub,
     required this.color,

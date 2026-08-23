@@ -16,6 +16,7 @@ import 'package:buildself/data/repositories/goal_repository.dart';
 import 'package:buildself/data/repositories/murmur_repository.dart';
 import 'package:buildself/data/repositories/reading_repository.dart';
 import 'package:buildself/shared/widgets/app_card.dart';
+import 'package:buildself/shared/widgets/emoji_icon.dart';
 
 /// 数据备份页
 class BackupScreen extends StatefulWidget {
@@ -331,7 +332,7 @@ class _BackupScreenState extends State<BackupScreen> {
                         child: const Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.check_circle, color: AppColors.success, size: 12),
+                            EmojiIcon('✅', size: 12),
                             SizedBox(width: 4),
                             Text('已连接',
                                 style: TextStyle(fontSize: 11, color: AppColors.success, fontWeight: FontWeight.w600)),
@@ -351,7 +352,7 @@ class _BackupScreenState extends State<BackupScreen> {
                       onPressed: _backing ? null : _startBackup,
                       icon: _backing
                           ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                          : const Icon(Icons.backup_outlined, size: 18),
+                          : const EmojiIcon('📥', size: 18),
                       label: Text(_backing ? '备份中…' : '立即备份'),
                     ),
                   ),
@@ -407,11 +408,11 @@ class _BackupScreenState extends State<BackupScreen> {
             AppCard(
               child: Column(
                 children: [
-                  _tapRow(Icons.file_download_outlined, '导出数据', '导出为 Markdown 文件', () => _exportData()),
+                  _tapRow('📥', '导出数据', '导出为 Markdown 文件', () => _exportData()),
                   const Divider(height: 1),
-                  _tapRow(Icons.delete_outline, '回收站', '管理已删除的记录', () => Navigator.pushNamed(context, AppRoutes.trash)),
+                  _tapRow('🗑️', '回收站', '管理已删除的记录', () => Navigator.pushNamed(context, AppRoutes.trash)),
                   const Divider(height: 1),
-                  _tapRow(Icons.cleaning_services_outlined, '清除缓存', '清理临时文件', () => _clearCache()),
+                  _tapRow('🧹', '清除缓存', '清理临时文件', () => _clearCache()),
                 ],
               ),
             ),
@@ -447,14 +448,14 @@ class _BackupScreenState extends State<BackupScreen> {
     );
   }
 
-  Widget _tapRow(IconData icon, String title, String sub, VoidCallback onTap) {
+  Widget _tapRow(String emoji, String title, String sub, VoidCallback onTap) {
     return InkWell(
       onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 13),
         child: Row(
           children: [
-            Icon(icon, size: 20, color: AppColors.textSecondary(context)),
+            EmojiIcon(emoji, size: 18),
             const SizedBox(width: 14),
             Expanded(
               child: Column(
@@ -516,7 +517,7 @@ class _BackupScreenState extends State<BackupScreen> {
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: () => _restoreBackup(f),
-                    icon: const Icon(Icons.restore, size: 16),
+                    icon: const EmojiIcon('↺', size: 16),
                     label: const Text('恢复', style: TextStyle(fontSize: 12)),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppColors.accent,
@@ -530,7 +531,7 @@ class _BackupScreenState extends State<BackupScreen> {
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: () => _deleteBackup(f),
-                    icon: const Icon(Icons.delete_outline, size: 16),
+                    icon: const EmojiIcon('🗑️', size: 16),
                     label: const Text('删除', style: TextStyle(fontSize: 12)),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppColors.error,

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:buildself/core/constants/colors.dart';
 import 'package:buildself/core/constants/strings.dart';
 import 'package:buildself/features/auth/providers/app_provider.dart';
+import 'package:buildself/shared/widgets/emoji_icon.dart';
 
 /// 主题设置页
 class ThemeSettingScreen extends StatelessWidget {
@@ -60,7 +61,7 @@ class ThemeSettingScreen extends StatelessWidget {
       leading: Icon(icon, color: isSelected ? Theme.of(context).colorScheme.primary : null),
       title: Text(title),
       subtitle: Text(subtitle, style: TextStyle(fontSize: 12, color: AppColors.textSecondary(context))),
-      trailing: isSelected ? const Icon(Icons.check_circle, color: Colors.green) : null,
+      trailing: isSelected ? const EmojiIcon('✅', size: 18) : null,
       onTap: onTap,
     );
   }

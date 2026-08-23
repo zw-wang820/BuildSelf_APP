@@ -7,6 +7,7 @@ import 'package:buildself/data/models/goal_model.dart';
 import 'package:buildself/data/models/reading_models.dart';
 import 'package:buildself/data/repositories/goal_repository.dart';
 import 'package:buildself/shared/widgets/app_card.dart';
+import 'package:buildself/shared/widgets/emoji_icon.dart';
 
 /// 目标详情页
 class GoalDetailScreen extends StatefulWidget {
@@ -177,7 +178,7 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
         actions: [
           if (isActive)
             IconButton(
-              icon: const Icon(Icons.edit_outlined),
+              icon: const EmojiIcon('✏️', size: 20),
               onPressed: () async {
                 await Navigator.pushNamed(context, AppRoutes.goalEdit);
                 _loadData();
@@ -283,11 +284,13 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     child: Row(
                       children: [
-                        Icon(
-                          log.progressAfter >= 100 ? Icons.check_circle : Icons.trending_up,
-                          color: AppColors.goal,
-                          size: 20,
-                        ),
+                        log.progressAfter >= 100
+                            ? const EmojiIcon('✅', size: 18)
+                            : Icon(
+                                Icons.trending_up,
+                                color: AppColors.goal,
+                                size: 20,
+                              ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Column(
@@ -349,7 +352,7 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
               color: AppColors.accent,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(Icons.card_giftcard, color: Colors.white, size: 28),
+            child: const Center(child: EmojiIcon('🎁', size: 26)),
           ),
           const SizedBox(width: 16),
           Expanded(

@@ -6,6 +6,7 @@ import 'package:buildself/data/models/enums.dart';
 import 'package:buildself/data/models/goal_model.dart';
 import 'package:buildself/data/repositories/goal_repository.dart';
 import 'package:buildself/features/auth/providers/app_provider.dart';
+import 'package:buildself/shared/widgets/emoji_icon.dart';
 
 /// 目标编辑/新建页
 class GoalEditScreen extends StatefulWidget {
@@ -174,7 +175,7 @@ class _GoalEditScreenState extends State<GoalEditScreen> {
                 _targetDate != null ? _formatDate(_targetDate!) : '选择截止日期',
                 style: TextStyle(color: _targetDate != null ? AppColors.textPrimary(context) : AppColors.textSecondary(context)),
               ),
-              trailing: const Icon(Icons.calendar_today_outlined),
+              trailing: const EmojiIcon('⏰', size: 18),
               onTap: _pickDate,
             ),
             const Divider(),

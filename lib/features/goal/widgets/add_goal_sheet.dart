@@ -4,6 +4,7 @@ import 'package:buildself/core/constants/colors.dart';
 import 'package:buildself/data/models/enums.dart';
 import 'package:buildself/data/models/goal_model.dart';
 import 'package:buildself/data/repositories/goal_repository.dart';
+import 'package:buildself/shared/widgets/emoji_icon.dart';
 import 'package:buildself/shared/widgets/gradient_button.dart';
 import 'package:buildself/shared/widgets/toast.dart';
 
@@ -317,7 +318,7 @@ class _AddGoalSheetState extends State<_AddGoalSheet> {
                   hintText: '输入里程碑，按 + 或回车添加',
                   counterText: '',
                   suffixIcon: IconButton(
-                    icon: const Icon(Icons.add_circle, color: AppColors.goal),
+                    icon: const EmojiIcon('➕', size: 18),
                     onPressed: _addMilestone,
                   ),
                 ),
@@ -349,8 +350,7 @@ class _AddGoalSheetState extends State<_AddGoalSheet> {
                             ),
                           ),
                           IconButton(
-                            icon: Icon(Icons.close,
-                                size: 16, color: AppColors.textSecondary(context)),
+                            icon: const EmojiIcon('❌', size: 14),
                             padding: const EdgeInsets.all(4),
                             constraints: const BoxConstraints(),
                             onPressed: () => _removeMilestone(i),
@@ -484,7 +484,7 @@ class _AddGoalSheetState extends State<_AddGoalSheet> {
             ),
             if (due == _GoalDue.custom) ...[
               const SizedBox(width: 2),
-              Icon(Icons.calendar_today, size: 12, color: accent),
+              const EmojiIcon('⏰', size: 11),
             ],
           ],
         ),

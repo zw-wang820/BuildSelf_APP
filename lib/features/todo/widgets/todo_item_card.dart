@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:buildself/core/constants/colors.dart';
 import 'package:buildself/features/todo/models/todo_model.dart';
 import 'package:buildself/features/todo/widgets/todo_checkbox.dart';
+import 'package:buildself/shared/widgets/emoji_icon.dart';
 
 /// 待办列表项 — 左侧优先级色条 + 圆形复选框 + 内容 + 分类/截止信息
 class TodoItemCard extends StatelessWidget {
@@ -153,7 +154,7 @@ class _DueBadge extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(Icons.schedule, size: 12, color: color),
+        EmojiIcon('⏰', size: 11),
         const SizedBox(width: 2),
         Text(
           todo.dueLabel,

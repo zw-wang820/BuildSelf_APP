@@ -4,6 +4,7 @@ import 'package:buildself/core/constants/colors.dart';
 import 'package:buildself/core/constants/strings.dart';
 import 'package:buildself/data/models/enums.dart';
 import 'package:buildself/features/auth/providers/app_provider.dart';
+import 'package:buildself/shared/widgets/emoji_icon.dart';
 
 /// 个人资料页
 class ProfileScreen extends StatelessWidget {
@@ -24,10 +25,10 @@ class ProfileScreen extends StatelessWidget {
     final messenger = ScaffoldMessenger.of(context);
 
     final stats = [
-      _Stat(icon: Icons.article_outlined, label: '总记录', value: '128', color: AppColors.primary),
-      _Stat(icon: Icons.timer_outlined, label: '专注时长', value: '64h', color: AppColors.work),
-      _Stat(icon: Icons.flag_outlined, label: '进行中目标', value: '9', color: AppColors.goalMid),
-      _Stat(icon: Icons.local_fire_department_outlined, label: '连续天数', value: '12', color: AppColors.warning),
+      _Stat(emoji: '📝', label: '总记录', value: '128', color: AppColors.primary),
+      _Stat(emoji: '🍅', label: '专注时长', value: '64h', color: AppColors.work),
+      _Stat(emoji: '🎯', label: '进行中目标', value: '9', color: AppColors.goalMid),
+      _Stat(emoji: '🔥', label: '连续天数', value: '12', color: AppColors.warning),
     ];
 
     return Scaffold(
@@ -205,7 +206,7 @@ class ProfileScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(s.icon, color: s.color, size: 20),
+          EmojiIcon(s.emoji, size: 20),
           const SizedBox(height: 6),
           Text(
             s.value,
@@ -297,9 +298,9 @@ class ProfileScreen extends StatelessWidget {
 }
 
 class _Stat {
-  final IconData icon;
+  final String emoji;
   final String label;
   final String value;
   final Color color;
-  _Stat({required this.icon, required this.label, required this.value, required this.color});
+  _Stat({required this.emoji, required this.label, required this.value, required this.color});
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:buildself/core/constants/colors.dart';
+import 'package:buildself/shared/widgets/emoji_icon.dart';
 
 /// 圆形复选框 — 点击带弹簧动画（elasticOut 回弹 + 对勾弹出）
 class TodoCheckbox extends StatefulWidget {
@@ -87,11 +88,7 @@ class _TodoCheckboxState extends State<TodoCheckbox>
               final t = Curves.elasticOut.transform(_ctrl.value);
               return Transform.scale(
                 scale: t,
-                child: Icon(
-                  Icons.check,
-                  size: widget.size * 0.62,
-                  color: Colors.white,
-                ),
+                child: EmojiIcon('✅', size: widget.size * 0.66),
               );
             },
           ),

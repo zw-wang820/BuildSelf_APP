@@ -228,7 +228,7 @@ class _MurmurScreenState extends State<MurmurScreen> {
     }
     if (_murmurs.isEmpty) {
       return EmptyState(
-        icon: Icons.auto_awesome,
+        emoji: '✨',
         message: '还没有碎碎念\n写下此刻的想法吧',
       );
     }

@@ -7,6 +7,7 @@ import 'package:buildself/data/models/reading_models.dart';
 import 'package:buildself/data/repositories/reading_repository.dart';
 import 'package:buildself/features/auth/providers/app_provider.dart';
 import 'package:buildself/features/reading/widgets/add_book_sheet.dart';
+import 'package:buildself/shared/widgets/emoji_icon.dart';
 import 'package:buildself/shared/widgets/nexus_background.dart';
 import 'package:buildself/shared/widgets/toast.dart';
 
@@ -152,7 +153,7 @@ class _BookshelfScreenState extends State<BookshelfScreen> {
         title: const Text('书架'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.search),
+            icon: const EmojiIcon('🔍', size: 21),
             onPressed: () => Navigator.pushNamed(context, AppRoutes.search,
                 arguments: 'reading'),
           ),
@@ -175,7 +176,7 @@ class _BookshelfScreenState extends State<BookshelfScreen> {
         onPressed: _openAddSheet,
         backgroundColor: AppColors.reading,
         foregroundColor: Colors.white,
-        child: const Icon(Icons.add),
+        child: const EmojiIcon('➕', size: 22),
       ),
     );
   }
@@ -354,12 +355,8 @@ class _BookshelfScreenState extends State<BookshelfScreen> {
               ),
               child: Stack(
                 children: [
-                  Center(
-                    child: Icon(
-                      Icons.menu_book,
-                      color: Colors.white.withValues(alpha: 0.9),
-                      size: 30,
-                    ),
+                  const Center(
+                    child: EmojiIcon('📚', size: 30),
                   ),
                   Positioned(
                     top: 6,
@@ -522,11 +519,7 @@ class _BookshelfScreenState extends State<BookshelfScreen> {
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Center(
-                child: Icon(
-                  Icons.menu_book,
-                  color: Colors.white.withValues(alpha: 0.9),
-                  size: 22,
-                ),
+                child: const EmojiIcon('📚', size: 22),
               ),
             ),
             const SizedBox(height: 5),
@@ -560,11 +553,7 @@ class _BookshelfScreenState extends State<BookshelfScreen> {
               color: accent.withValues(alpha: 0.12),
               shape: BoxShape.circle,
             ),
-            child: Icon(
-              isAll ? Icons.collections_bookmark_outlined : Icons.menu_book_outlined,
-              color: accent,
-              size: 30,
-            ),
+            child: const Center(child: EmojiIcon('📚', size: 30)),
           ),
           const SizedBox(height: 14),
           Text(

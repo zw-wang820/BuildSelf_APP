@@ -9,6 +9,7 @@ import 'package:buildself/data/repositories/murmur_repository.dart';
 import 'package:buildself/data/repositories/reading_repository.dart';
 import 'package:buildself/features/auth/providers/app_provider.dart';
 import 'package:buildself/shared/widgets/app_card.dart';
+import 'package:buildself/shared/widgets/emoji_icon.dart';
 import 'package:buildself/shared/widgets/nexus_background.dart';
 
 /// 搜索范围标识
@@ -259,7 +260,7 @@ class _SearchScreenState extends State<SearchScreen> {
             focusedBorder: InputBorder.none,
             suffixIcon: _controller.text.isNotEmpty
                 ? IconButton(
-                    icon: Icon(Icons.close, size: 18, color: AppColors.textSecondary(context)),
+                    icon: const EmojiIcon('❌', size: 16),
                     onPressed: () {
                       _controller.clear();
                       setState(() {
@@ -298,16 +299,16 @@ class _SearchScreenState extends State<SearchScreen> {
     switch (_scope) {
       case _SearchScope.reading:
         modules = [
-          _ModuleHint(icon: Icons.menu_book_outlined, label: '书籍（按书名 / 作者）', tag: 'BOOK', color: AppColors.reading),
-          _ModuleHint(icon: Icons.edit_note_outlined, label: '读书笔记（按内容）', tag: 'NOTE', color: AppColors.reading.withOpacity(0.8)),
+          _ModuleHint(emoji: '📚', label: '书籍（按书名 / 作者）', tag: 'BOOK', color: AppColors.reading),
+          _ModuleHint(emoji: '📝', label: '读书笔记（按内容）', tag: 'NOTE', color: AppColors.reading.withOpacity(0.8)),
         ];
         break;
       default:
         modules = [
-          _ModuleHint(icon: Icons.event_outlined, label: '工作记录', tag: 'WORK', color: AppColors.work),
-          _ModuleHint(icon: Icons.local_cafe_outlined, label: '生活记录', tag: 'LIFE', color: AppColors.life),
-          _ModuleHint(icon: Icons.gps_fixed_outlined, label: '目标', tag: 'GOAL', color: AppColors.goal),
-          _ModuleHint(icon: Icons.auto_awesome, label: '碎碎念', tag: 'MURMUR', color: AppColors.murmur),
+          _ModuleHint(emoji: '💼', label: '工作记录', tag: 'WORK', color: AppColors.work),
+          _ModuleHint(emoji: '🌿', label: '生活记录', tag: 'LIFE', color: AppColors.life),
+          _ModuleHint(emoji: '🎯', label: '目标', tag: 'GOAL', color: AppColors.goal),
+          _ModuleHint(emoji: '✨', label: '碎碎念', tag: 'MURMUR', color: AppColors.murmur),
         ];
     }
     return Padding(
@@ -345,7 +346,7 @@ class _SearchScreenState extends State<SearchScreen> {
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(color: m.color.withOpacity(0.4), width: 0.8),
                         ),
-                        child: Icon(m.icon, color: m.color, size: 18),
+                        child: Center(child: EmojiIcon(m.emoji, size: 18)),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
@@ -491,10 +492,10 @@ class _SearchResult {
 }
 
 class _ModuleHint {
-  final IconData icon;
+  final String emoji;
   final String label;
   final String tag;
   final Color color;
 
-  _ModuleHint({required this.icon, required this.label, required this.tag, required this.color});
+  _ModuleHint({required this.emoji, required this.label, required this.tag, required this.color});
 }

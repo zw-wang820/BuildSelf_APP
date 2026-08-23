@@ -6,6 +6,7 @@ import 'package:buildself/data/models/enums.dart';
 import 'package:buildself/data/models/reading_models.dart';
 import 'package:buildself/data/repositories/reading_repository.dart';
 import 'package:buildself/features/reading/screens/note_edit_screen.dart';
+import 'package:buildself/shared/widgets/emoji_icon.dart';
 import 'package:buildself/shared/widgets/empty_state.dart';
 
 /// 书籍详情页 — 展示书籍信息和笔记
@@ -129,7 +130,7 @@ class _BookDetailScreenState extends State<BookDetailScreen>
           setState(() {}); // 触发 _NotesList 重建以刷新数据
         },
         backgroundColor: AppColors.reading,
-        child: const Icon(Icons.add),
+        child: const EmojiIcon('➕', size: 22),
       ),
     );
   }
@@ -147,7 +148,7 @@ class _BookDetailScreenState extends State<BookDetailScreen>
               color: AppColors.reading.withOpacity(0.2),
               borderRadius: BorderRadius.circular(6),
             ),
-            child: const Icon(Icons.menu_book, color: AppColors.reading, size: 28),
+            child: const Center(child: EmojiIcon('📚', size: 28)),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -263,7 +264,7 @@ class _NotesListState extends State<_NotesList> with AutomaticKeepAliveClientMix
     if (_notes.isEmpty) {
       final label = widget.noteType?.label ?? '笔记';
       return EmptyState(
-        icon: Icons.note_outlined,
+        emoji: '📝',
         message: '暂无$label\n点击右下角 + 添加笔记',
       );
     }

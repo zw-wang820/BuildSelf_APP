@@ -9,6 +9,7 @@ import 'package:buildself/data/repositories/work_repository.dart';
 import 'package:buildself/features/auth/providers/app_provider.dart';
 import 'package:buildself/shared/layouts/main_scaffold.dart';
 import 'package:buildself/shared/widgets/app_card.dart';
+import 'package:buildself/shared/widgets/emoji_icon.dart';
 import 'package:buildself/shared/widgets/empty_state.dart';
 import 'package:buildself/shared/widgets/nexus_background.dart';
 import 'package:buildself/shared/widgets/tag_chip.dart';
@@ -57,7 +58,7 @@ class _WorkListScreenState extends State<WorkListScreen> {
         title: Text(AppStrings.workTitle),
         actions: [
           IconButton(
-            icon: const Icon(Icons.search),
+            icon: const EmojiIcon('🔍', size: 21),
             onPressed: () => _showSearch(context),
           ),
         ],
@@ -89,7 +90,7 @@ class _WorkListScreenState extends State<WorkListScreen> {
         },
         backgroundColor: AppColors.work,
         foregroundColor: AppColors.spaceDeep,
-        child: const Icon(Icons.add),
+        child: const EmojiIcon('➕', size: 22),
       ),
       floatingActionButtonLocation: const FloatingAboveNavLocation(),
     );
@@ -135,7 +136,7 @@ class _WorkListScreenState extends State<WorkListScreen> {
   Widget _buildList() {
     if (_notes.isEmpty) {
       return EmptyState(
-        icon: Icons.event_outlined,
+        emoji: '💼',
         message: '还没有工作记录\n点击右下角 + 开始记录',
         onAction: () async {
           await Navigator.pushNamed(context, AppRoutes.workEdit);

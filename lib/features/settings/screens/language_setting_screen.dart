@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:buildself/core/constants/colors.dart';
 import 'package:buildself/core/constants/strings.dart';
 import 'package:buildself/features/auth/providers/app_provider.dart';
+import 'package:buildself/shared/widgets/emoji_icon.dart';
 
 /// 语言设置页
 class LanguageSettingScreen extends StatelessWidget {
@@ -43,7 +44,7 @@ class LanguageSettingScreen extends StatelessWidget {
       ),
       title: Text(locale.displayName),
       trailing: isSelected
-          ? const Icon(Icons.check_circle, color: Colors.green)
+          ? const EmojiIcon('✅', size: 18)
           : null,
       onTap: onTap,
     );

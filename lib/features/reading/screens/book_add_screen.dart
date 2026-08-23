@@ -5,6 +5,7 @@ import 'package:buildself/core/constants/strings.dart';
 import 'package:buildself/data/models/enums.dart';
 import 'package:buildself/data/repositories/reading_repository.dart';
 import 'package:buildself/features/auth/providers/app_provider.dart';
+import 'package:buildself/shared/widgets/emoji_icon.dart';
 
 /// 添加书籍页
 class BookAddScreen extends StatefulWidget {
@@ -110,7 +111,7 @@ class _BookAddScreenState extends State<BookAddScreen> {
               controller: _titleController,
               decoration: const InputDecoration(
                 hintText: '书名',
-                prefixIcon: Icon(Icons.menu_book_outlined),
+                prefixIcon: EmojiIcon('📚', size: 20),
               ),
             ),
             const SizedBox(height: 16),

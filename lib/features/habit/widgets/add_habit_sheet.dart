@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:buildself/core/constants/colors.dart';
 import 'package:buildself/features/habit/data/habit_repository.dart';
 import 'package:buildself/features/habit/models/habit_model.dart';
+import 'package:buildself/shared/widgets/emoji_icon.dart';
 import 'package:buildself/shared/widgets/gradient_button.dart';
 import 'package:buildself/shared/widgets/toast.dart';
 
@@ -114,8 +115,7 @@ class _AddHabitSheetState extends State<_AddHabitSheet> {
                   const Spacer(),
                   IconButton(
                     onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close),
-                    color: AppColors.textSecondary(context),
+                    icon: const EmojiIcon('❌', size: 16),
                   ),
                 ],
               ),
@@ -240,7 +240,7 @@ class _AddHabitSheetState extends State<_AddHabitSheet> {
               : null,
         ),
         child: selected
-            ? const Icon(Icons.check, color: Colors.white, size: 18)
+            ? const Center(child: EmojiIcon('✅', size: 15))
             : null,
       ),
     );

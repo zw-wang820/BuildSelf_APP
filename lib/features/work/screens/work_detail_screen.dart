@@ -3,6 +3,7 @@ import 'package:buildself/core/constants/colors.dart';
 import 'package:buildself/core/constants/strings.dart';
 import 'package:buildself/data/models/work_note_model.dart';
 import 'package:buildself/data/repositories/work_repository.dart';
+import 'package:buildself/shared/widgets/emoji_icon.dart';
 import 'package:buildself/shared/widgets/empty_state.dart';
 import 'package:buildself/shared/widgets/tag_chip.dart';
 
@@ -53,7 +54,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         actions: [
           if (_note != null)
             IconButton(
-              icon: const Icon(Icons.edit_outlined),
+              icon: const EmojiIcon('✏️', size: 20),
               onPressed: () async {
                 await Navigator.pushNamed(context, '/work/edit', arguments: WorkEditArgs(note: _note));
                 _loadNote();

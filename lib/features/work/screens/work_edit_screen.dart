@@ -6,6 +6,7 @@ import 'package:buildself/data/models/enums.dart';
 import 'package:buildself/data/models/work_note_model.dart';
 import 'package:buildself/data/repositories/work_repository.dart';
 import 'package:buildself/features/auth/providers/app_provider.dart';
+import 'package:buildself/shared/widgets/emoji_icon.dart';
 import 'package:buildself/shared/widgets/mood_selector.dart';
 import 'package:buildself/shared/widgets/tag_chip.dart';
 
@@ -215,7 +216,7 @@ class _WorkEditScreenState extends State<WorkEditScreen> {
               ),
             ),
             const SizedBox(width: 8),
-            IconButton(icon: const Icon(Icons.add_circle_outline), onPressed: _addTag),
+            IconButton(icon: const EmojiIcon('➕', size: 20), onPressed: _addTag),
           ]),
         ]),
       ),

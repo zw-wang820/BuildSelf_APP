@@ -8,6 +8,7 @@ import 'package:buildself/features/work/screens/work_list_screen.dart';
 import 'package:buildself/features/life/screens/life_list_screen.dart';
 import 'package:buildself/features/goal/screens/goal_board_screen.dart';
 import 'package:buildself/features/reading/screens/bookshelf_screen.dart';
+import 'package:buildself/shared/widgets/emoji_icon.dart';
 
 /// 主框架 — 毛玻璃底栏导航（Kimi 风格）
 class MainScaffold extends StatefulWidget {
@@ -29,11 +30,11 @@ class _MainScaffoldState extends State<MainScaffold> {
   ];
 
   List<_NavSpec> get _specs => [
-    _NavSpec(icon: Icons.home_outlined, activeIcon: Icons.home, label: AppStrings.tabHome, color: AppColors.primary),
-    _NavSpec(icon: Icons.event_outlined, activeIcon: Icons.event, label: AppStrings.tabWork, color: AppColors.work),
-    _NavSpec(icon: Icons.local_cafe_outlined, activeIcon: Icons.local_cafe, label: AppStrings.tabLife, color: AppColors.life),
-    _NavSpec(icon: Icons.gps_fixed_outlined, activeIcon: Icons.gps_fixed, label: AppStrings.tabGoal, color: AppColors.goal),
-    _NavSpec(icon: Icons.menu_book_outlined, activeIcon: Icons.menu_book, label: AppStrings.tabReading, color: AppColors.reading),
+    _NavSpec(emoji: '🏠', label: AppStrings.tabHome, color: AppColors.primary),
+    _NavSpec(emoji: '💼', label: AppStrings.tabWork, color: AppColors.work),
+    _NavSpec(emoji: '🌿', label: AppStrings.tabLife, color: AppColors.life),
+    _NavSpec(emoji: '🎯', label: AppStrings.tabGoal, color: AppColors.goal),
+    _NavSpec(emoji: '📖', label: AppStrings.tabReading, color: AppColors.reading),
   ];
 
   @override
@@ -107,10 +108,18 @@ class _GlassBottomNav extends StatelessWidget {
                             duration: const Duration(milliseconds: 200),
                             curve: Curves.easeOut,
                             transform: Matrix4.translationValues(0, selected ? -2.0 : 0, 0),
-                            child: Icon(
-                              selected ? spec.activeIcon : spec.icon,
-                              size: selected ? 24 : 22,
-                              color: color,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 9, vertical: 3),
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: selected
+                                  ? spec.color.withValues(alpha: 0.14)
+                                  : Colors.transparent,
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                            child: EmojiIcon(
+                              spec.emoji,
+                              size: selected ? 26 : 22,
                             ),
                           ),
                           const SizedBox(height: 3),
@@ -137,14 +146,12 @@ class _GlassBottomNav extends StatelessWidget {
 }
 
 class _NavSpec {
-  final IconData icon;
-  final IconData activeIcon;
+  final String emoji;
   final String label;
   final Color color;
 
   _NavSpec({
-    required this.icon,
-    required this.activeIcon,
+    required this.emoji,
     required this.label,
     required this.color,
   });

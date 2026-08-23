@@ -14,6 +14,8 @@ class AppTables {
   static const String tags = 'tags';
   static const String trashItems = 'trash_items';
   static const String todos = 'todos';
+  static const String habits = 'habits';
+  static const String habitLogs = 'habit_logs';
 }
 
 /// 建表 SQL
@@ -191,6 +193,27 @@ class AppSql {
     )
   ''';
 
+  static const String createHabits = '''
+    CREATE TABLE IF NOT EXISTS ${AppTables.habits} (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      name TEXT NOT NULL,
+      icon TEXT NOT NULL DEFAULT '💪',
+      color_index INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL,
+      FOREIGN KEY (user_id) REFERENCES ${AppTables.users}(user_id)
+    )
+  ''';
+
+  static const String createHabitLogs = '''
+    CREATE TABLE IF NOT EXISTS ${AppTables.habitLogs} (
+      id TEXT PRIMARY KEY,
+      habit_id TEXT NOT NULL,
+      date TEXT NOT NULL,
+      FOREIGN KEY (habit_id) REFERENCES ${AppTables.habits}(id) ON DELETE CASCADE
+    )
+  ''';
+
   /// 所有建表语句
   static const List<String> allCreateStatements = [
     createUsers,
@@ -204,6 +227,8 @@ class AppSql {
     createTags,
     createTrashItems,
     createTodos,
+    createHabits,
+    createHabitLogs,
   ];
 
   /// 索引创建语句
@@ -220,5 +245,8 @@ class AppSql {
     'CREATE INDEX IF NOT EXISTS idx_murmurs_user ON ${AppTables.murmurs}(user_id)',
     'CREATE INDEX IF NOT EXISTS idx_murmurs_deleted ON ${AppTables.murmurs}(deleted_at)',
     'CREATE INDEX IF NOT EXISTS idx_todos_user ON ${AppTables.todos}(user_id)',
+    'CREATE INDEX IF NOT EXISTS idx_habits_user ON ${AppTables.habits}(user_id)',
+    'CREATE INDEX IF NOT EXISTS idx_habit_logs_habit ON ${AppTables.habitLogs}(habit_id)',
+    'CREATE INDEX IF NOT EXISTS idx_habit_logs_date ON ${AppTables.habitLogs}(date)',
   ];
 }

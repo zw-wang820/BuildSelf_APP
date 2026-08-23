@@ -70,6 +70,20 @@ class DatabaseProvider {
         'ALTER TABLE ${AppTables.books} ADD COLUMN last_read_at TEXT',
       );
     }
+    // v4: 新增习惯打卡表
+    if (oldVersion < 4) {
+      await db.execute(AppSql.createHabits);
+      await db.execute(AppSql.createHabitLogs);
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_habits_user ON ${AppTables.habits}(user_id)',
+      );
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_habit_logs_habit ON ${AppTables.habitLogs}(habit_id)',
+      );
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_habit_logs_date ON ${AppTables.habitLogs}(date)',
+      );
+    }
   }
 
   // ==================== 通用 CRUD 方法 ====================

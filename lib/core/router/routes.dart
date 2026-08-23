@@ -16,6 +16,9 @@ class AppRoutes {
   // 待办模块
   static const String todoList = '/todo';
 
+  // 习惯打卡模块
+  static const String habitList = '/habit';
+
   // 工作模块
   static const String workList = '/work';
   static const String workDetail = '/work/detail';

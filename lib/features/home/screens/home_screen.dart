@@ -8,15 +8,13 @@ import 'package:buildself/shared/widgets/nexus_background.dart';
 import 'package:buildself/features/auth/providers/app_provider.dart';
 import 'package:buildself/data/repositories/goal_repository.dart';
 import 'package:buildself/data/repositories/reading_repository.dart';
-import 'package:buildself/data/repositories/life_repository.dart';
-import 'package:buildself/data/repositories/work_repository.dart';
-import 'package:buildself/data/repositories/murmur_repository.dart';
 import 'package:buildself/data/models/goal_model.dart';
 import 'package:buildself/data/models/reading_models.dart';
 import 'package:buildself/data/models/enums.dart';
 import 'package:buildself/features/todo/data/todo_repository.dart';
 import 'package:buildself/features/todo/models/todo_model.dart';
 import 'package:buildself/features/todo/widgets/todo_checkbox.dart';
+import 'package:buildself/features/habit/data/habit_repository.dart';
 import 'package:buildself/shared/widgets/toast.dart';
 
 /// 首页 — 成长日报
@@ -30,9 +28,6 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final GoalRepository _goalRepo = GoalRepository();
   final ReadingRepository _readingRepo = ReadingRepository();
-  final LifeRepository _lifeRepo = LifeRepository();
-  final WorkRepository _workRepo = WorkRepository();
-  final MurmurRepository _murmurRepo = MurmurRepository();
 
   // 进行中目标 — 列表（最多展示 3 条）
   List<Goal> _activeGoals = [];
@@ -44,17 +39,14 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Todo> _todos = [];
   bool _loadingTodos = true;
   int _todoCount = 0;
-  // 习惯打卡 功能尚未实现，先以 0 占位。
-  int _habitCount = 0;
+  // 习惯打卡 — 真实数据：_habitDone 今日已打卡数，_habitTotal 习惯总数
+  final HabitRepository _habitRepo = HabitRepository();
+  int _habitDone = 0;
+  int _habitTotal = 0;
 
   // 正在阅读（status = reading 的书籍，最多 3 条）
   List<Book> _readingBooks = [];
   bool _loadingReading = true;
-
-  int _growthIndex = 0;
-  int _streakDays = 0;
-  int _weeklyActive = 0;
-  bool _loadingIndex = true;
 
   @override
   void initState() {
@@ -69,8 +61,8 @@ class _HomeScreenState extends State<HomeScreen> {
     await Future.wait([
       _loadGoals(userId),
       _loadReading(userId),
-      _loadGrowth(userId),
       _loadTodos(userId),
+      _loadHabits(userId),
     ]);
   }
 
@@ -121,6 +113,31 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  /// 加载首页习惯打卡统计（今日已打卡 / 总数）
+  Future<void> _loadHabits(String userId) async {
+    try {
+      final habits = await _habitRepo.getAll(userId);
+      final done = await _habitRepo.getTodayDoneCount(userId);
+      if (mounted) {
+        setState(() {
+          _habitTotal = habits.length;
+          _habitDone = done;
+        });
+      }
+    } catch (_) {
+      // 静默失败，保留上次数据
+    }
+  }
+
+  /// 打开习惯列表页，返回后刷新打卡统计
+  Future<void> _openHabitList() async {
+    await Navigator.pushNamed(context, AppRoutes.habitList);
+    if (mounted) {
+      final userId = context.read<AppProvider>().userId;
+      if (userId.isNotEmpty) _loadHabits(userId);
+    }
+  }
+
   /// 打开待办列表页，返回后刷新预览与计数
   Future<void> _openTodoList() async {
     await Navigator.pushNamed(context, AppRoutes.todoList);
@@ -130,14 +147,13 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  /// 打开目标列表页，返回后刷新目标列表、数量与成长指数
+  /// 打开目标列表页，返回后刷新目标列表与数量
   Future<void> _openGoalBoard() async {
     await Navigator.pushNamed(context, AppRoutes.goalBoard);
     if (mounted) {
       final userId = context.read<AppProvider>().userId;
       if (userId.isNotEmpty) {
         await _loadGoals(userId);
-        await _loadGrowth(userId);
       }
     }
   }
@@ -173,68 +189,6 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  /// 成长指数 = 目标平均进度×0.4 + 周活跃度×0.4 + 连续天数×0.2（三者均归一 0-100）
-  Future<void> _loadGrowth(String userId) async {
-    try {
-      final now = DateTime.now();
-      final since = now.subtract(const Duration(days: 30));
-      final results = await Future.wait<List<String>>([
-        _goalRepo.getActiveDateStamps(userId, since),
-        _readingRepo.getActiveDateStamps(userId, since),
-        _workRepo.getActiveDateStamps(userId, since),
-        _lifeRepo.getActiveDateStamps(userId, since),
-        _murmurRepo.getActiveDateStamps(userId, since),
-      ]);
-
-      final daySet = <DateTime>{};
-      for (final list in results) {
-        for (final stamp in list) {
-          daySet.add(DateTime.parse(stamp));
-        }
-      }
-
-      final today = DateTime(now.year, now.month, now.day);
-      // 连续天数：从今天往前数连续有记录的天数（今天无记录则从昨天起算）
-      int streak = 0;
-      var cursor = today;
-      if (!daySet.contains(cursor)) {
-        cursor = cursor.subtract(const Duration(days: 1));
-      }
-      while (daySet.contains(cursor)) {
-        streak++;
-        cursor = cursor.subtract(const Duration(days: 1));
-      }
-
-      // 近 7 天活跃天数
-      final weekStart = today.subtract(const Duration(days: 6));
-      final weeklyActive =
-          daySet.where((d) => !d.isBefore(weekStart)).length;
-
-      // 进行中目标平均进度
-      final goals = await _goalRepo.getActiveGoals(userId);
-      final goalProgress = goals.isEmpty
-          ? 0.0
-          : goals.map((g) => g.calculatedProgress).reduce((a, b) => a + b) /
-              goals.length;
-
-      final weeklyNorm = (weeklyActive.clamp(0, 7) / 7) * 100;
-      final streakNorm = (streak.clamp(0, 30) / 30) * 100;
-      final index =
-          (goalProgress * 0.4 + weeklyNorm * 0.4 + streakNorm * 0.2).round();
-
-      if (mounted) {
-        setState(() {
-          _growthIndex = index;
-          _streakDays = streak;
-          _weeklyActive = weeklyActive;
-          _loadingIndex = false;
-        });
-      }
-    } catch (_) {
-      if (mounted) setState(() => _loadingIndex = false);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return NexusBackground(
@@ -247,8 +201,6 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               _buildHeader(context),
               const SizedBox(height: 20),
-              _buildHero(context),
-              const SizedBox(height: 16),
               _buildDataStrip(context),
               const SizedBox(height: 20),
               _buildQuickRecords(context),
@@ -371,90 +323,15 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  /// 成长指数 hero 卡
-  Widget _buildHero(BuildContext context) {
-    final value = _growthIndex.clamp(0, 100) / 100;
-    return Container(
-      decoration: BoxDecoration(
-        gradient: AppColors.primaryGradient,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text('今日成长指数',
-              style: TextStyle(fontSize: 13, color: Colors.white70)),
-          const SizedBox(height: 8),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              if (_loadingIndex)
-                const SizedBox(
-                  width: 64,
-                  height: 34,
-                  child: Center(
-                    child: SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                )
-              else
-                Text('$_growthIndex',
-                    style: const TextStyle(
-                      fontSize: 36,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                      height: 1,
-                    )),
-              if (!_loadingIndex) ...[
-                const SizedBox(width: 6),
-                const Padding(
-                  padding: EdgeInsets.only(bottom: 5),
-                  child: Text('/ 100',
-                      style: TextStyle(fontSize: 13, color: Colors.white60)),
-                ),
-              ],
-            ],
-          ),
-          const SizedBox(height: 16),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(
-              value: value,
-              minHeight: 6,
-              backgroundColor: Colors.white.withValues(alpha: 0.25),
-              valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
-            ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            _loadingIndex
-                ? '正在计算你的成长…'
-                : '近7天活跃 $_weeklyActive 天 · 进行中 $_activeGoalCount 个 · 连续 $_streakDays 天',
-            style: const TextStyle(fontSize: 12, color: Colors.white70),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// 成长数据条 — hero 下方三张数据卡
-  /// 待办已接入真实数据；习惯打卡暂以 0 占位
+  /// 成长数据条 — 待办 / 进行中目标 / 习惯打卡 三张统计卡
   Widget _buildDataStrip(BuildContext context) {
     return Row(
       children: [
         Expanded(
           child: _buildStatCard(
             context,
-            icon: Icons.checklist_outlined,
             label: '待办',
-            value: _todoCount,
+            value: '$_todoCount',
             color: AppColors.todo,
             onTap: _openTodoList,
           ),
@@ -463,9 +340,8 @@ class _HomeScreenState extends State<HomeScreen> {
         Expanded(
           child: _buildStatCard(
             context,
-            icon: Icons.gps_fixed,
             label: '进行中目标',
-            value: _activeGoalCount,
+            value: '$_activeGoalCount',
             color: AppColors.goal,
             onTap: _openGoalBoard,
           ),
@@ -474,50 +350,39 @@ class _HomeScreenState extends State<HomeScreen> {
         Expanded(
           child: _buildStatCard(
             context,
-            icon: Icons.repeat_outlined,
             label: '习惯打卡',
-            value: _habitCount,
+            value: _habitTotal == 0 ? '0' : '$_habitDone/$_habitTotal',
             color: AppColors.habit,
+            onTap: _openHabitList,
           ),
         ),
       ],
     );
   }
 
-  /// 单张数据卡 — 图标 + 大数字 + 标签
+  /// 单张数据卡 — 大数字 + 标签
   Widget _buildStatCard(
     BuildContext context, {
-    required IconData icon,
     required String label,
-    required int value,
+    required String value,
     required Color color,
     VoidCallback? onTap,
   }) {
     return AppCard(
       accent: color,
       onTap: onTap,
-      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 6),
+      padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 6),
       child: Column(
         children: [
-          Container(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.14),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, color: color, size: 20),
-          ),
-          const SizedBox(height: 10),
           Text(
-            '$value',
+            value,
             style: TextStyle(
-              fontSize: 24,
+              fontSize: 26,
               fontWeight: FontWeight.w800,
               color: color,
             ),
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: 4),
           Text(
             label,
             style: TextStyle(

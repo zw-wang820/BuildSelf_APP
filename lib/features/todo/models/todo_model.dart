@@ -36,6 +36,115 @@ enum TodoDueType {
   final String label;
 }
 
+/// 重复周期类型
+enum TodoRepeatType { none, daily, weekly, monthly, yearly }
+
+/// 重复规则 — 时间驱动：到周期自动生成新实例
+class TodoRepeat {
+  final TodoRepeatType type;
+  final int interval; // 每 N 个周期（日/周/月/年），默认 1
+  final Set<int> weekdays; // weekly 时生效：1=周一 … 7=周日
+  final int? maxCount; // 终止：总共最多生成 N 个实例（含模板本身）
+  final DateTime? endDate; // 终止：超过该日期后不再生成
+
+  const TodoRepeat({
+    required this.type,
+    this.interval = 1,
+    this.weekdays = const {},
+    this.maxCount,
+    this.endDate,
+  });
+
+  bool get isNone => type == TodoRepeatType.none;
+
+  /// 周期摘要：每天 / 每周五 / 每 2 周 / 每月 15 日 / 每年 3 月 1 日
+  /// [due] 传入模板截止日，用于每月/每年取"日"与"月日"
+  String label({DateTime? due}) {
+    switch (type) {
+      case TodoRepeatType.daily:
+        return interval > 1 ? '每 $interval 天' : '每天';
+      case TodoRepeatType.weekly:
+        if (weekdays.isNotEmpty) {
+          final names = weekdays.map(_weekdayName).toList()..sort();
+          final daysText = names.join('、');
+          return interval > 1 ? '每 $interval 周（$daysText）' : '每周$daysText';
+        }
+        return interval > 1 ? '每 $interval 周' : '每周';
+      case TodoRepeatType.monthly:
+        final day = due?.day ?? DateTime.now().day;
+        return interval > 1 ? '每 $interval 个月 $day 日' : '每月 $day 日';
+      case TodoRepeatType.yearly:
+        if (due != null) {
+          return interval > 1
+              ? '每 $interval 年 ${due.month} 月 ${due.day} 日'
+              : '每年 ${due.month} 月 ${due.day} 日';
+        }
+        return interval > 1 ? '每 $interval 年' : '每年';
+      case TodoRepeatType.none:
+        return '不重复';
+    }
+  }
+
+  /// 完整摘要（含终止条件）：每天 · 永不结束 / 每周五 · 共 5 次 / 每月 1 日 · 至 12/31
+  String fullLabel({DateTime? due}) {
+    if (isNone) return '不重复';
+    final parts = <String>[label(due: due)];
+    if (maxCount != null) {
+      parts.add('共 $maxCount 次');
+    } else if (endDate != null) {
+      final d = endDate!;
+      parts.add('至 ${d.month}/${d.day}');
+    } else {
+      parts.add('永不结束');
+    }
+    return parts.join(' · ');
+  }
+
+  static const weekdayNames = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+
+  static String _weekdayName(int w) {
+    final i = w - 1;
+    if (i >= 0 && i < weekdayNames.length) return weekdayNames[i];
+    return '周$w';
+  }
+
+  Map<String, dynamic> toMap() {
+    final sorted = weekdays.toList()..sort();
+    return {
+      'repeat_type': type.name,
+      'repeat_interval': interval,
+      'repeat_weekdays': sorted.isEmpty ? null : sorted.join(','),
+      'repeat_max_count': maxCount,
+      'repeat_end_date': endDate?.toIso8601String(),
+    };
+  }
+
+  factory TodoRepeat.fromMap(Map<String, dynamic> map) {
+    final type = TodoRepeatType.values.firstWhere(
+      (e) => e.name == map['repeat_type'],
+      orElse: () => TodoRepeatType.none,
+    );
+    if (type == TodoRepeatType.none) return const TodoRepeat(type: TodoRepeatType.none);
+    final weekdaysRaw = map['repeat_weekdays'] as String?;
+    final weekdays = <int>{};
+    if (weekdaysRaw != null && weekdaysRaw.isNotEmpty) {
+      for (final part in weekdaysRaw.split(',')) {
+        final v = int.tryParse(part);
+        if (v != null && v >= 1 && v <= 7) weekdays.add(v);
+      }
+    }
+    return TodoRepeat(
+      type: type,
+      interval: ((map['repeat_interval'] as int? ?? 1)).clamp(1, 99).toInt(),
+      weekdays: weekdays,
+      maxCount: map['repeat_max_count'] as int?,
+      endDate: map['repeat_end_date'] == null
+          ? null
+          : DateTime.tryParse(map['repeat_end_date'] as String),
+    );
+  }
+}
+
 /// 待办实体
 class Todo {
   final String id;
@@ -49,6 +158,8 @@ class Todo {
   final bool isCompleted;
   final DateTime createdAt;
   final DateTime? completedAt;
+  final TodoRepeat? repeat; // 重复规则（null = 不重复）
+  final String? repeatOriginId; // 由同一模板生成的实例共享模板 id
 
   const Todo({
     required this.id,
@@ -62,7 +173,15 @@ class Todo {
     this.isCompleted = false,
     required this.createdAt,
     this.completedAt,
+    this.repeat,
+    this.repeatOriginId,
   });
+
+  /// 是否为重复待办
+  bool get isRepeat => repeat != null && !repeat!.isNone;
+
+  /// 重复摘要（卡片徽章用）：每周五
+  String? get repeatLabel => isRepeat ? repeat!.label(due: dueDate) : null;
 
   Map<String, dynamic> toMap() => {
         'id': id,
@@ -76,6 +195,8 @@ class Todo {
         'is_completed': isCompleted ? 1 : 0,
         'created_at': createdAt.toIso8601String(),
         'completed_at': completedAt?.toIso8601String(),
+        ...?repeat?.toMap(),
+        'repeat_origin_id': repeatOriginId,
       };
 
   factory Todo.fromMap(Map<String, dynamic> map) {
@@ -104,6 +225,8 @@ class Todo {
       completedAt: map['completed_at'] == null
           ? null
           : DateTime.tryParse(map['completed_at'] as String),
+      repeat: TodoRepeat.fromMap(map),
+      repeatOriginId: map['repeat_origin_id'] as String?,
     );
   }
 
@@ -116,6 +239,8 @@ class Todo {
     DateTime? dueDate,
     bool? isCompleted,
     DateTime? completedAt,
+    TodoRepeat? repeat,
+    String? repeatOriginId,
   }) {
     return Todo(
       id: id,
@@ -129,6 +254,8 @@ class Todo {
       isCompleted: isCompleted ?? this.isCompleted,
       createdAt: createdAt,
       completedAt: completedAt ?? this.completedAt,
+      repeat: repeat ?? this.repeat,
+      repeatOriginId: repeatOriginId ?? this.repeatOriginId,
     );
   }
 

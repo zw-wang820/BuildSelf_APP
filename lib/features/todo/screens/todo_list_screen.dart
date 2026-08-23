@@ -84,6 +84,8 @@ class _TodoListScreenState extends State<TodoListScreen> {
     final userId = context.read<AppProvider>().userId;
     if (userId.isEmpty) return;
     setState(() => _loading = true);
+    // 先惰性补建到期重复实例，再加载列表
+    await _repo.ensureDueInstances(userId);
     final list = await _repo.getAll(
       userId,
       category: _filter.category,
@@ -115,6 +117,24 @@ class _TodoListScreenState extends State<TodoListScreen> {
         ToastHelper.show(
           context,
           '✅ 待办创建成功！',
+          icon: Icons.check_circle,
+          color: AppColors.success,
+        );
+      },
+    );
+  }
+
+  /// 点击卡片编辑待办
+  Future<void> _openEditSheet(Todo todo) async {
+    await showEditTodoSheet(
+      context,
+      repository: _repo,
+      todo: todo,
+      onUpdated: (_) {
+        _loadData();
+        ToastHelper.show(
+          context,
+          '✅ 待办已更新',
           icon: Icons.check_circle,
           color: AppColors.success,
         );
@@ -234,13 +254,41 @@ class _TodoListScreenState extends State<TodoListScreen> {
       itemCount: _todos.length,
       itemBuilder: (context, i) {
         final todo = _todos[i];
-        return TodoItemCard(
+        return Dismissible(
           key: ValueKey(todo.id),
-          todo: todo,
-          onToggle: _toggleTodo,
+          direction: DismissDirection.endToStart,
+          onDismissed: (_) => _deleteTodo(todo),
+          background: _buildDeleteBackground(context),
+          child: TodoItemCard(
+            todo: todo,
+            onToggle: _toggleTodo,
+            onTap: () => _openEditSheet(todo),
+          ),
         );
       },
     );
+  }
+
+  /// 左滑露出的删除背景（红色 + 🗑️）
+  Widget _buildDeleteBackground(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        color: AppColors.error.withValues(alpha: 0.92),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      padding: const EdgeInsets.only(right: 24),
+      alignment: Alignment.centerRight,
+      child: const EmojiIcon('🗑️', size: 22),
+    );
+  }
+
+  /// 左滑删除待办
+  Future<void> _deleteTodo(Todo todo) async {
+    setState(() => _todos.removeWhere((t) => t.id == todo.id));
+    await _repo.delete(todo.id);
+    if (!mounted) return;
+    ToastHelper.show(context, '🗑️ 待办已删除');
   }
 
   Widget _buildEmpty() {

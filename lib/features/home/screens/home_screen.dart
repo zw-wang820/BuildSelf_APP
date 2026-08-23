@@ -14,6 +14,7 @@ import 'package:buildself/data/models/reading_models.dart';
 import 'package:buildself/data/models/enums.dart';
 import 'package:buildself/features/todo/data/todo_repository.dart';
 import 'package:buildself/features/todo/models/todo_model.dart';
+import 'package:buildself/features/todo/widgets/add_todo_sheet.dart';
 import 'package:buildself/features/todo/widgets/todo_checkbox.dart';
 import 'package:buildself/features/habit/data/habit_repository.dart';
 import 'package:buildself/shared/widgets/toast.dart';
@@ -100,6 +101,8 @@ class _HomeScreenState extends State<HomeScreen> {
   /// 加载首页待办预览 — 未完成优先（最多 4 条）+ 已完成补位（最多 2 条，删除线展示）
   Future<void> _loadTodos(String userId) async {
     try {
+      // 先惰性补建到期重复实例
+      await _todoRepo.ensureDueInstances(userId);
       final active = await _todoRepo.getAll(userId, completed: false, limit: 4);
       final done = await _todoRepo.getAll(userId, completed: true, limit: 2);
       final todos = [...active, ...done];
@@ -514,55 +517,73 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  /// 首页点击待办行 — 打开编辑表单，保存后刷新预览
+  Future<void> _editTodoAtHome(Todo todo) async {
+    await showEditTodoSheet(
+      context,
+      repository: _todoRepo,
+      todo: todo,
+      onUpdated: (_) {
+        final userId = context.read<AppProvider>().userId;
+        if (userId.isNotEmpty) _loadTodos(userId);
+        ToastHelper.show(context, '✅ 待办已更新');
+      },
+    );
+  }
+
   /// 首页待办单行 — 优先级色条 + 圆形复选框 + 内容 + 截止
   Widget _buildTodoRow(Todo todo) {
     final priColor = todo.priority.color;
-    return Row(
-      children: [
-        Container(
-          width: 3,
-          height: 26,
-          decoration: BoxDecoration(
-            color: priColor,
-            borderRadius: BorderRadius.circular(2),
-          ),
-        ),
-        const SizedBox(width: 10),
-        TodoCheckbox(
-          value: todo.isCompleted,
-          activeColor: priColor,
-          size: 22,
-          onChanged: (_) => _toggleTodoAtHome(todo),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Text(
-            todo.content,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight:
-                  todo.isCompleted ? FontWeight.w400 : FontWeight.w500,
-              color: todo.isCompleted
-                  ? AppColors.textSecondary(context)
-                  : AppColors.textPrimary(context),
-              decoration: todo.isCompleted
-                  ? TextDecoration.lineThrough
-                  : null,
-              decorationColor: AppColors.textSecondary(context),
+    return GestureDetector(
+      onTap: () => _editTodoAtHome(todo),
+      behavior: HitTestBehavior.opaque,
+      child: Row(
+        children: [
+          Container(
+            width: 3,
+            height: 26,
+            decoration: BoxDecoration(
+              color: priColor,
+              borderRadius: BorderRadius.circular(2),
             ),
           ),
-        ),
-        const SizedBox(width: 8),
-        Text(
-          todo.dueLabel,
-          style: TextStyle(
-            fontSize: 11,
-            color: AppColors.textSecondary(context),
+          const SizedBox(width: 10),
+          TodoCheckbox(
+            value: todo.isCompleted,
+            activeColor: priColor,
+            size: 22,
+            onChanged: (_) => _toggleTodoAtHome(todo),
           ),
-        ),
-      ],
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              todo.content,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight:
+                    todo.isCompleted ? FontWeight.w400 : FontWeight.w500,
+                color: todo.isCompleted
+                    ? AppColors.textSecondary(context)
+                    : AppColors.textPrimary(context),
+                decoration: todo.isCompleted
+                    ? TextDecoration.lineThrough
+                    : null,
+                decorationColor: AppColors.textSecondary(context),
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            todo.dueLabel,
+            style: TextStyle(
+              fontSize: 11,
+              color: AppColors.textSecondary(context),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

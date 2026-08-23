@@ -189,6 +189,12 @@ class AppSql {
       is_completed INTEGER NOT NULL DEFAULT 0,
       created_at TEXT NOT NULL,
       completed_at TEXT,
+      repeat_type TEXT NOT NULL DEFAULT 'none',
+      repeat_interval INTEGER NOT NULL DEFAULT 1,
+      repeat_weekdays TEXT,
+      repeat_max_count INTEGER,
+      repeat_end_date TEXT,
+      repeat_origin_id TEXT,
       FOREIGN KEY (user_id) REFERENCES ${AppTables.users}(user_id)
     )
   ''';
@@ -245,6 +251,7 @@ class AppSql {
     'CREATE INDEX IF NOT EXISTS idx_murmurs_user ON ${AppTables.murmurs}(user_id)',
     'CREATE INDEX IF NOT EXISTS idx_murmurs_deleted ON ${AppTables.murmurs}(deleted_at)',
     'CREATE INDEX IF NOT EXISTS idx_todos_user ON ${AppTables.todos}(user_id)',
+    'CREATE INDEX IF NOT EXISTS idx_todos_repeat_origin ON ${AppTables.todos}(repeat_origin_id)',
     'CREATE INDEX IF NOT EXISTS idx_habits_user ON ${AppTables.habits}(user_id)',
     'CREATE INDEX IF NOT EXISTS idx_habit_logs_habit ON ${AppTables.habitLogs}(habit_id)',
     'CREATE INDEX IF NOT EXISTS idx_habit_logs_date ON ${AppTables.habitLogs}(date)',

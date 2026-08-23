@@ -8,9 +8,14 @@ import 'package:buildself/shared/widgets/emoji_icon.dart';
 class TodoItemCard extends StatelessWidget {
   final Todo todo;
   final ValueChanged<Todo> onToggle;
+  final VoidCallback? onTap; // 点击卡片编辑
 
-  const TodoItemCard({Key? key, required this.todo, required this.onToggle})
-      : super(key: key);
+  const TodoItemCard({
+    Key? key,
+    required this.todo,
+    required this.onToggle,
+    this.onTap,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -20,37 +25,40 @@ class TodoItemCard extends StatelessWidget {
     final priColor = todo.priority.color;
     final cat = todo.category;
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      decoration: BoxDecoration(
-        color: surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: divider, width: 0.5),
-        boxShadow: [
-          BoxShadow(
-            color: isDark ? AppColors.shadowDark : AppColors.shadowLight,
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: IntrinsicHeight(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // 优先级色条：红=高 / 黄=中 / 绿=低
-            Container(width: 4, color: priColor),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
-                child: Row(
-                  children: [
-                    TodoCheckbox(
-                      value: todo.isCompleted,
-                      activeColor: priColor,
-                      onChanged: (_) => onToggle(todo),
-                    ),
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        decoration: BoxDecoration(
+          color: surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: divider, width: 0.5),
+          boxShadow: [
+            BoxShadow(
+              color: isDark ? AppColors.shadowDark : AppColors.shadowLight,
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // 优先级色条：红=高 / 黄=中 / 绿=低
+              Container(width: 4, color: priColor),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+                  child: Row(
+                    children: [
+                      TodoCheckbox(
+                        value: todo.isCompleted,
+                        activeColor: priColor,
+                        onChanged: (_) => onToggle(todo),
+                      ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
@@ -88,6 +96,10 @@ class TodoItemCard extends StatelessWidget {
                           Row(
                             children: [
                               _CategoryBadge(category: cat),
+                              if (todo.isRepeat) ...[
+                                const SizedBox(width: 8),
+                                _RepeatBadge(label: todo.repeatLabel!),
+                              ],
                               const SizedBox(width: 8),
                               _DueBadge(todo: todo),
                               if (todo.isOverdue) ...[
@@ -113,7 +125,8 @@ class TodoItemCard extends StatelessWidget {
           ],
         ),
       ),
-    );
+    ),
+  );
   }
 }
 
@@ -136,6 +149,31 @@ class _CategoryBadge extends StatelessWidget {
           fontSize: 11,
           fontWeight: FontWeight.w600,
           color: category.color,
+        ),
+      ),
+    );
+  }
+}
+
+/// 重复徽章 — 🔄 + 周期摘要（每周五 / 每月 1 日 …）
+class _RepeatBadge extends StatelessWidget {
+  final String label;
+  const _RepeatBadge({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(
+        '🔄 $label',
+        style: const TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: AppColors.primary,
         ),
       ),
     );

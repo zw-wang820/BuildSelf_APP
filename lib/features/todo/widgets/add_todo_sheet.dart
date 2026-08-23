@@ -26,16 +26,43 @@ Future<void> showAddTodoSheet(
   );
 }
 
+/// 弹出「编辑待办」底部表单
+///
+/// 保存成功后调用 [onUpdated] 并关闭表单
+Future<void> showEditTodoSheet(
+  BuildContext context, {
+  required TodoRepository repository,
+  required Todo todo,
+  required ValueChanged<Todo> onUpdated,
+}) {
+  return showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (_) => _AddTodoSheet(
+      repository: repository,
+      todo: todo,
+      onUpdated: onUpdated,
+    ),
+  );
+}
+
 class _AddTodoSheet extends StatefulWidget {
   final String userId;
   final TodoRepository repository;
-  final ValueChanged<Todo> onCreated;
+  final ValueChanged<Todo>? onCreated;
+  final Todo? todo; // 非空 = 编辑模式
+  final ValueChanged<Todo>? onUpdated;
 
   const _AddTodoSheet({
-    required this.userId,
+    this.userId = '',
     required this.repository,
-    required this.onCreated,
+    this.onCreated,
+    this.todo,
+    this.onUpdated,
   });
+
+  bool get isEdit => todo != null;
 
   @override
   State<_AddTodoSheet> createState() => _AddTodoSheetState();
@@ -50,6 +77,75 @@ class _AddTodoSheetState extends State<_AddTodoSheet> {
   TodoDueType _dueType = TodoDueType.today;
   DateTime? _customDueDate;
   bool _creating = false;
+
+  // 重复设置
+  TodoRepeatType _repeatType = TodoRepeatType.none;
+  int _repeatInterval = 1;
+  Set<int> _repeatWeekdays = {DateTime.now().weekday};
+  bool _repeatEndByCount = false; // 终止方式：按次数
+  int _repeatCountValue = 5;
+  bool _repeatEndByDate = false; // 终止方式：按日期
+  DateTime? _repeatEndDate;
+
+  bool get _isRepeat => _repeatType != TodoRepeatType.none;
+
+  /// 依据表单组装重复规则（不重复返回 null）
+  TodoRepeat? _buildRepeat() {
+    if (!_isRepeat) return null;
+    return TodoRepeat(
+      type: _repeatType,
+      interval: _repeatInterval,
+      weekdays:
+          _repeatType == TodoRepeatType.weekly ? _repeatWeekdays : const {},
+      maxCount: _repeatEndByCount ? _repeatCountValue : null,
+      endDate: _repeatEndByDate ? _repeatEndDate : null,
+    );
+  }
+
+  Future<void> _pickRepeatEndDate() async {
+    final today = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _repeatEndDate ?? today,
+      firstDate: today,
+      lastDate: today.add(const Duration(days: 3650)),
+      helpText: '选择重复结束日期',
+    );
+    if (picked == null) return;
+    if (mounted) {
+      setState(() {
+        _repeatEndByDate = true;
+        _repeatEndDate = picked;
+      });
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    final t = widget.todo;
+    if (t != null) {
+      _contentCtrl.text = t.content;
+      _noteCtrl.text = t.note;
+      _category = t.category;
+      _priority = t.priority;
+      _dueType = t.dueType;
+      _customDueDate = t.dueDate;
+      final r = t.repeat;
+      if (r != null && !r.isNone) {
+        _repeatType = r.type;
+        _repeatInterval = r.interval;
+        if (r.weekdays.isNotEmpty) _repeatWeekdays = {...r.weekdays};
+        if (r.maxCount != null) {
+          _repeatEndByCount = true;
+          _repeatCountValue = r.maxCount!;
+        } else if (r.endDate != null) {
+          _repeatEndByDate = true;
+          _repeatEndDate = r.endDate;
+        }
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -102,6 +198,30 @@ class _AddTodoSheetState extends State<_AddTodoSheet> {
     if (_creating) return;
     setState(() => _creating = true);
     try {
+      if (widget.isEdit) {
+        final t = widget.todo!;
+        final updated = Todo(
+          id: t.id,
+          userId: t.userId,
+          content: content,
+          note: _noteCtrl.text.trim(),
+          category: _category,
+          priority: _priority,
+          dueType: _dueType,
+          dueDate: _resolveDueDate(),
+          isCompleted: t.isCompleted,
+          createdAt: t.createdAt,
+          completedAt: t.completedAt,
+          repeat: _buildRepeat(),
+          repeatOriginId: t.repeatOriginId,
+        );
+        await widget.repository.update(updated);
+        if (mounted) {
+          widget.onUpdated?.call(updated);
+          Navigator.of(context).pop();
+        }
+        return;
+      }
       final todo = await widget.repository.create(
         userId: widget.userId,
         content: content,
@@ -110,14 +230,15 @@ class _AddTodoSheetState extends State<_AddTodoSheet> {
         priority: _priority,
         dueType: _dueType,
         dueDate: _resolveDueDate(),
+        repeat: _buildRepeat(),
       );
       if (mounted) {
-        widget.onCreated(todo);
+        widget.onCreated?.call(todo);
         Navigator.of(context).pop();
       }
     } catch (_) {
       if (mounted) {
-        ToastHelper.show(context, '创建失败，请重试', icon: Icons.error_outline);
+        ToastHelper.show(context, '保存失败，请重试', icon: Icons.error_outline);
         setState(() => _creating = false);
       }
     }
@@ -163,7 +284,7 @@ class _AddTodoSheetState extends State<_AddTodoSheet> {
               ),
               const SizedBox(height: 16),
               Text(
-                '新建待办',
+                widget.isEdit ? '编辑待办' : '新建待办',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
@@ -317,10 +438,194 @@ class _AddTodoSheetState extends State<_AddTodoSheet> {
                   ),
                 ],
               ),
+              const SizedBox(height: 18),
+              // 重复
+              Text('重复', style: labelStyle),
+              const SizedBox(height: 10),
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: TodoRepeatType.values.map((t) {
+                  final selected = _repeatType == t;
+                  return GestureDetector(
+                    onTap: () => setState(() => _repeatType = t),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 180),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 9),
+                      decoration: BoxDecoration(
+                        color: selected
+                            ? AppColors.primary.withValues(alpha: 0.14)
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: selected ? AppColors.primary : divider,
+                          width: selected ? 1.4 : 1,
+                        ),
+                      ),
+                      child: Text(
+                        _repeatTypeLabel(t),
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: selected
+                              ? AppColors.primary
+                              : AppColors.textPrimary(context),
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+              if (_isRepeat) ...[
+                // 每周几多选
+                if (_repeatType == TodoRepeatType.weekly) ...[
+                  const SizedBox(height: 14),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      for (var i = 1; i <= 7; i++)
+                        _buildWeekdayChip(i),
+                    ],
+                  ),
+                ],
+                const SizedBox(height: 14),
+                // 间隔
+                Row(
+                  children: [
+                    Text('每', style: labelStyle),
+                    const SizedBox(width: 8),
+                    _buildStepButton(Icons.remove, () {
+                      setState(() {
+                        if (_repeatInterval > 1) _repeatInterval--;
+                      });
+                    }),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: Text(
+                        '$_repeatInterval',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary(context),
+                        ),
+                      ),
+                    ),
+                    _buildStepButton(Icons.add, () {
+                      setState(() {
+                        if (_repeatInterval < 99) _repeatInterval++;
+                      });
+                    }),
+                    const SizedBox(width: 10),
+                    Text(_repeatUnitLabel, style: labelStyle),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                // 终止条件
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    _buildEndChip('永不结束', !_repeatEndByCount && !_repeatEndByDate,
+                        () => setState(() {
+                          _repeatEndByCount = false;
+                          _repeatEndByDate = false;
+                        })),
+                    _buildEndChip('按次数', _repeatEndByCount, () =>
+                        setState(() {
+                          _repeatEndByCount = true;
+                          _repeatEndByDate = false;
+                        })),
+                    _buildEndChip('按日期', _repeatEndByDate, () =>
+                        setState(() {
+                          _repeatEndByDate = true;
+                          _repeatEndByCount = false;
+                        })),
+                  ],
+                ),
+                if (_repeatEndByCount) ...[
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Text('共', style: labelStyle),
+                      const SizedBox(width: 8),
+                      _buildStepButton(Icons.remove, () {
+                        setState(() {
+                          if (_repeatCountValue > 2) _repeatCountValue--;
+                        });
+                      }),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: Text(
+                          '$_repeatCountValue',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary(context),
+                          ),
+                        ),
+                      ),
+                      _buildStepButton(Icons.add, () {
+                        setState(() {
+                          if (_repeatCountValue < 99) _repeatCountValue++;
+                        });
+                      }),
+                      const SizedBox(width: 10),
+                      Text('次（含本条）', style: labelStyle),
+                    ],
+                  ),
+                ],
+                if (_repeatEndByDate) ...[
+                  const SizedBox(height: 10),
+                  GestureDetector(
+                    onTap: _pickRepeatEndDate,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 9),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                            color: AppColors.primary.withValues(alpha: 0.5)),
+                      ),
+                      child: Text(
+                        _repeatEndDate == null
+                            ? '选择结束日期'
+                            : '至 ${_repeatEndDate!.year}-${_repeatEndDate!.month.toString().padLeft(2, '0')}-${_repeatEndDate!.day.toString().padLeft(2, '0')}',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 10),
+                Builder(builder: (ctx) {
+                  final r = _buildRepeat();
+                  final due = _resolveDueDate();
+                  final endText = r?.maxCount != null
+                      ? '共生成 ${r!.maxCount} 次'
+                      : (r?.endDate != null
+                          ? '至 ${_repeatEndDate!.month}/${_repeatEndDate!.day} 结束'
+                          : '永不结束');
+                  return Text(
+                    '🔁 将${r?.label(due: due) ?? ''}自动创建，$endText',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textSecondary(context),
+                    ),
+                  );
+                }),
+              ],
               const SizedBox(height: 24),
               // 创建按钮
               GradientButton(
-                label: _creating ? '创建中…' : '创建待办',
+                label: _creating
+                    ? '保存中…'
+                    : (widget.isEdit ? '保存修改' : '创建待办'),
                 icon: Icons.add_task,
                 onPressed: _creating ? null : _create,
               ),            ],
@@ -371,6 +676,126 @@ class _AddTodoSheetState extends State<_AddTodoSheet> {
               Icon(Icons.calendar_today, size: 12, color: accent),
             ],
           ],
+        ),
+      ),
+    );
+  }
+
+  // ==================== 重复设置辅助 ====================
+
+  String _repeatTypeLabel(TodoRepeatType t) {
+    switch (t) {
+      case TodoRepeatType.none:
+        return '不重复';
+      case TodoRepeatType.daily:
+        return '每天';
+      case TodoRepeatType.weekly:
+        return '每周';
+      case TodoRepeatType.monthly:
+        return '每月';
+      case TodoRepeatType.yearly:
+        return '每年';
+    }
+  }
+
+  String get _repeatUnitLabel {
+    switch (_repeatType) {
+      case TodoRepeatType.daily:
+        return '天';
+      case TodoRepeatType.weekly:
+        return '周';
+      case TodoRepeatType.monthly:
+        return '个月';
+      case TodoRepeatType.yearly:
+        return '年';
+      case TodoRepeatType.none:
+        return '';
+    }
+  }
+
+  Widget _buildWeekdayChip(int weekday) {
+    final selected = _repeatWeekdays.contains(weekday);
+    final name = TodoRepeat.weekdayNames[weekday - 1];
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final dividerColor = isDark ? AppColors.dividerDark : AppColors.dividerLight;
+    return GestureDetector(
+      onTap: () => setState(() {
+        if (selected) {
+          _repeatWeekdays.remove(weekday);
+        } else {
+          _repeatWeekdays.add(weekday);
+        }
+      }),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        decoration: BoxDecoration(
+          color: selected
+              ? AppColors.primary.withValues(alpha: 0.14)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: selected ? AppColors.primary : dividerColor,
+            width: selected ? 1.3 : 1,
+          ),
+        ),
+        child: Text(
+          name,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+            color: selected
+                ? AppColors.primary
+                : AppColors.textSecondary(context),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStepButton(IconData icon, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        width: 30,
+        height: 30,
+        decoration: BoxDecoration(
+          color: AppColors.primary.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Icon(icon, size: 18, color: AppColors.primary),
+      ),
+    );
+  }
+
+  Widget _buildEndChip(String label, bool selected, VoidCallback onTap) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final dividerColor = isDark ? AppColors.dividerDark : AppColors.dividerLight;
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        decoration: BoxDecoration(
+          color: selected
+              ? AppColors.primary.withValues(alpha: 0.14)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: selected ? AppColors.primary : dividerColor,
+            width: selected ? 1.3 : 1,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+            color: selected
+                ? AppColors.primary
+                : AppColors.textSecondary(context),
+          ),
         ),
       ),
     );

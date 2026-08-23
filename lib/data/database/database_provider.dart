@@ -84,6 +84,30 @@ class DatabaseProvider {
         'CREATE INDEX IF NOT EXISTS idx_habit_logs_date ON ${AppTables.habitLogs}(date)',
       );
     }
+    // v5: 待办新增重复规则字段
+    if (oldVersion < 5) {
+      await db.execute(
+        'ALTER TABLE ${AppTables.todos} ADD COLUMN repeat_type TEXT NOT NULL DEFAULT \'none\'',
+      );
+      await db.execute(
+        'ALTER TABLE ${AppTables.todos} ADD COLUMN repeat_interval INTEGER NOT NULL DEFAULT 1',
+      );
+      await db.execute(
+        'ALTER TABLE ${AppTables.todos} ADD COLUMN repeat_weekdays TEXT',
+      );
+      await db.execute(
+        'ALTER TABLE ${AppTables.todos} ADD COLUMN repeat_max_count INTEGER',
+      );
+      await db.execute(
+        'ALTER TABLE ${AppTables.todos} ADD COLUMN repeat_end_date TEXT',
+      );
+      await db.execute(
+        'ALTER TABLE ${AppTables.todos} ADD COLUMN repeat_origin_id TEXT',
+      );
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_todos_repeat_origin ON ${AppTables.todos}(repeat_origin_id)',
+      );
+    }
   }
 
   // ==================== 通用 CRUD 方法 ====================

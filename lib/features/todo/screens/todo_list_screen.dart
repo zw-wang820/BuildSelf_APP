@@ -49,8 +49,8 @@ extension _TodoFilterX on _TodoFilter {
     }
   }
 
-  // 全部/分类标签仅显示未完成
-  bool? get completed => this == _TodoFilter.completed;
+  // 全部/分类标签展示该范围的全部（含已完成）；仅「已完成」限定为已完成
+  bool? get completed => this == _TodoFilter.completed ? true : null;
 
   Color get accent {
     switch (this) {

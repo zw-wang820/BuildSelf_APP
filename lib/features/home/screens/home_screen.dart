@@ -97,10 +97,12 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  /// 加载首页待办预览（最多 3 条未完成）与未完成总数
+  /// 加载首页待办预览 — 未完成优先（最多 4 条）+ 已完成补位（最多 2 条，删除线展示）
   Future<void> _loadTodos(String userId) async {
     try {
-      final todos = await _todoRepo.getAll(userId, completed: false, limit: 3);
+      final active = await _todoRepo.getAll(userId, completed: false, limit: 4);
+      final done = await _todoRepo.getAll(userId, completed: true, limit: 2);
+      final todos = [...active, ...done];
       final count = await _todoRepo.getActiveCount(userId);
       if (mounted) {
         setState(() {
@@ -168,7 +170,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  /// 首页勾选完成 — 落库后从预览移除并 Toast 反馈
+  /// 首页勾选完成/恢复 — 落库后刷新预览（已完成仍展示，删除线样式），Toast 反馈
   Future<void> _toggleTodoAtHome(Todo todo) async {
     final nowCompleted = !todo.isCompleted;
     if (nowCompleted) {
@@ -183,11 +185,8 @@ class _HomeScreenState extends State<HomeScreen> {
       icon: nowCompleted ? Icons.check_circle : Icons.undo,
       color: nowCompleted ? AppColors.success : AppColors.info,
     );
-    setState(() {
-      _todos.removeWhere((t) => t.id == todo.id);
-      final updated = _todoCount + (nowCompleted ? -1 : 1);
-      _todoCount = updated < 0 ? 0 : updated;
-    });
+    final userId = context.read<AppProvider>().userId;
+    if (userId.isNotEmpty) await _loadTodos(userId);
   }
 
   @override
@@ -543,8 +542,15 @@ class _HomeScreenState extends State<HomeScreen> {
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
               fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: AppColors.textPrimary(context),
+              fontWeight:
+                  todo.isCompleted ? FontWeight.w400 : FontWeight.w500,
+              color: todo.isCompleted
+                  ? AppColors.textSecondary(context)
+                  : AppColors.textPrimary(context),
+              decoration: todo.isCompleted
+                  ? TextDecoration.lineThrough
+                  : null,
+              decorationColor: AppColors.textSecondary(context),
             ),
           ),
         ),

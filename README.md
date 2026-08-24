@@ -1,16 +1,77 @@
-# buildself
+# BuildSelf 🚀
 
-A new Flutter project.
+> 个人成长记录 App — 记录工作、生活与成长，把每一天都变成自己的进度条。
 
-## Getting Started
+BuildSelf 是一款**本地优先**的个人成长工具，覆盖工作记录、生活记录、阅读管理、目标管理与习惯养成五大场景，帮助你把成长过程可视化。
 
-This project is a starting point for a Flutter application.
+## ✨ 功能特性
 
-A few resources to get you started if this is your first Flutter project:
+| 模块 | 说明 |
+| --- | --- |
+| 🏠 成长日报首页 | 待办 / 进行中目标 / 习惯打卡数据一览，今日待办快捷勾选，正在阅读预览 |
+| 💼 工作记录 | 按日期记录工作内容与收获，支持编辑、删除、导出 |
+| 🌿 生活记录 | 记录日常点滴与心情（emoji 心情选择） |
+| 📖 阅读管理 | 书架（想读 / 在读 / 读完）、阅读进度、读书笔记 |
+| 🎯 目标管理 | 短期 / 中期 / 长期目标，里程碑推进，🎁 奖励机制，成就徽章墙 |
+| 📋 待办清单 | 分类（工作·生活·阅读·学习）、优先级、截止时间、**周期重复**（每天 / 每周 / 每月 / 每年，时间驱动自动生成新实例） |
+| ✅ 习惯打卡 | 12 个 emoji 图标 + 8 色板，连续天数统计，打卡粒子庆祝动效，支持补打昨天 |
+| ⚙️ 设置 | 全局字号四档切换、主题自适应、数据备份/恢复、回收站 |
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+## 🛠 技术栈
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+- **框架**：Flutter 3.44+（Android / iOS 双端）
+- **状态管理**：Provider
+- **本地存储**：SQLite（sqflite），数据完全存储在设备本地
+- **图标体系**：全站 emoji 图标（替换 Material Icons）
+
+## 📦 项目结构
+
+```
+lib/
+├── core/          # 常量、主题、路由、工具
+├── data/          # 数据库（Provider / 表结构）、模型、仓库
+├── features/      # 业务模块（home / work / life / reading / goal / todo / habit / murmur / search / settings / profile）
+└── shared/        # 公共组件（AppCard、EmojiIcon、Toast 等）
+```
+
+## 🚀 快速开始
+
+```bash
+# 1. 安装依赖
+flutter pub get
+
+# 2. 运行（需连接设备或模拟器）
+flutter run
+
+# 3. 构建
+flutter build apk        # Android
+flutter build ios        # iOS
+```
+
+## 📱 环境要求
+
+- Flutter 3.44+（Dart 3.x）
+- Android / iOS 设备或模拟器
+
+## 🗄 数据与迁移
+
+数据库采用版本化迁移（当前 v5），升级自动执行、存量数据无感：
+
+| 版本 | 变更 |
+| --- | --- |
+| v1 → v2 | 基础表结构（工作 / 生活 / 阅读 / 目标） |
+| v2 → v3 | 书籍表新增阅读进度、封面色、最近阅读字段 |
+| v3 → v4 | 新增习惯打卡表 `habits` / `habit_logs` |
+| v4 → v5 | 待办表新增重复规则字段 + 索引 |
+
+## 📌 当前状态
+
+- **V1.0 范围**：仅本地使用 · 无账号登录 · 无社交 / 社区 · 数据不出设备
+- 已完成：首页、工作、生活、阅读、目标管理、待办（含周期重复）、习惯打卡、设置（字号 / 主题 / 备份）
+- 进行中：首页「今日复盘」、番茄钟模块规划
+
+## 📄 相关文档
+
+- `Buildself_PRD.md.md` — 产品需求文档
+- `CODE_WIKI.md` — 代码说明
+- `2026MMDD-update.md` — 每日开发日志

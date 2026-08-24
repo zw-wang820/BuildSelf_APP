@@ -98,13 +98,21 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  /// 加载首页待办预览 — 未完成优先（最多 4 条）+ 已完成补位（最多 2 条，删除线展示）
+  /// 加载首页待办预览 — 未完成优先（最多 8 条）+ 今日已完成补位（最多 4 条，删除线展示）
+  /// 已完成的待办仅在当天（今日 0 点 ~ 23:59:59）保留展示，跨天后自动从首页消失
   Future<void> _loadTodos(String userId) async {
     try {
       // 先惰性补建到期重复实例
       await _todoRepo.ensureDueInstances(userId);
-      final active = await _todoRepo.getAll(userId, completed: false, limit: 4);
-      final done = await _todoRepo.getAll(userId, completed: true, limit: 2);
+      final now = DateTime.now();
+      final todayStart = DateTime(now.year, now.month, now.day);
+      final active = await _todoRepo.getAll(userId, completed: false, limit: 8);
+      final done = await _todoRepo.getAll(
+        userId,
+        completed: true,
+        completedAfter: todayStart,
+        limit: 4,
+      );
       final todos = [...active, ...done];
       final count = await _todoRepo.getActiveCount(userId);
       if (mounted) {
@@ -485,7 +493,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  /// 今日待办内容 — 预览进行中的待办（最多 3 条），点击复选框可直接勾选完成
+  /// 今日待办内容 — 预览未完成待办 + 今日已完成（删除线样式），点击复选框可直接勾选完成
   Widget _buildTodoContent() {
     if (_loadingTodos) {
       return const Padding(

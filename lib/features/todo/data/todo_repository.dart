@@ -42,11 +42,13 @@ class TodoRepository {
 
   /// 列表查询
   /// [category] 指定分类过滤；[completed] 为 true 仅已完成、false 仅未完成、null 全部
+  /// [completedAfter] 仅当 [completed] 为 true 时生效：只取完成时间不早于该时刻的记录（如"今天 0 点"）
   /// [limit] 限制返回条数（预览场景使用）
   Future<List<Todo>> getAll(
     String userId, {
     TodoCategory? category,
     bool? completed,
+    DateTime? completedAfter,
     int? limit,
   }) async {
     final where = <String>['user_id = ?'];
@@ -58,6 +60,11 @@ class TodoRepository {
     if (completed != null) {
       where.add('is_completed = ?');
       args.add(completed ? 1 : 0);
+    }
+    // completed_at 存 ISO8601 字符串，字典序与时间序一致，可直接字符串比较
+    if (completed == true && completedAfter != null) {
+      where.add('completed_at >= ?');
+      args.add(completedAfter.toIso8601String());
     }
     final maps = await _db.queryAll(
       AppTables.todos,

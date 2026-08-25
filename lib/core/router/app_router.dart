@@ -21,6 +21,7 @@ import 'package:buildself/features/reading/screens/note_edit_screen.dart';
 import 'package:buildself/features/murmur/screens/murmur_screen.dart';
 import 'package:buildself/features/search/screens/search_screen.dart';
 import 'package:buildself/features/todo/screens/todo_list_screen.dart';
+import 'package:buildself/features/todo/screens/todo_stats_screen.dart';
 import 'package:buildself/features/habit/screens/habit_list_screen.dart';
 import 'package:buildself/features/profile/screens/profile_center_screen.dart';
 import 'package:buildself/features/profile/screens/profile_screen.dart';
@@ -102,6 +103,8 @@ class AppRouter {
       // 待办模块
       case AppRoutes.todoList:
         return _buildRoute(const TodoListScreen(), settings);
+      case AppRoutes.todoStats:
+        return _buildRoute(const TodoStatsScreen(), settings);
 
       // 习惯打卡模块
       case AppRoutes.habitList:

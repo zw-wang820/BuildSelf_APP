@@ -2,6 +2,7 @@ import 'package:uuid/uuid.dart';
 import 'package:buildself/data/database/database_provider.dart';
 import 'package:buildself/data/database/tables.dart';
 import 'package:buildself/features/todo/models/todo_model.dart';
+import 'package:buildself/features/todo/models/todo_stats.dart';
 
 /// 待办仓库
 class TodoRepository {
@@ -84,6 +85,68 @@ class TodoRepository {
       whereArgs: [userId, 0],
     );
     return maps.length;
+  }
+
+  /// 统计 — 时间段内到期口径（due_date 落在 [start, end]，含边界日 23:59:59）
+  /// + 近 7 天每日完成趋势（completed_at 归日，以今天为最后一天）
+  Future<TodoStats> getStats(
+    String userId, {
+    required DateTime start,
+    required DateTime end,
+  }) async {
+    final startIso =
+        DateTime(start.year, start.month, start.day).toIso8601String();
+    final endIso = DateTime(end.year, end.month, end.day, 23, 59, 59)
+        .toIso8601String();
+
+    // 1. 到期全集：due_date 落在区间（含已完成与未完成）
+    final dueMaps = await _db.queryAll(
+      AppTables.todos,
+      where: 'user_id = ? AND due_date >= ? AND due_date <= ?',
+      whereArgs: [userId, startIso, endIso],
+    );
+    final dueTodos = dueMaps.map(Todo.fromMap).toList();
+    final completed = dueTodos.where((t) => t.isCompleted).length;
+
+    // 2. 近 7 天完成记录（今天往前 6 天 ~ 今天）
+    final now = DateTime.now();
+    final weekStart = DateTime(now.year, now.month, now.day - 6);
+    final weekMaps = await _db.queryAll(
+      AppTables.todos,
+      where:
+          'user_id = ? AND is_completed = ? AND completed_at >= ? AND completed_at <= ?',
+      whereArgs: [
+        userId,
+        1,
+        weekStart.toIso8601String(),
+        DateTime(now.year, now.month, now.day, 23, 59, 59).toIso8601String(),
+      ],
+    );
+    final weekDoneTodos = weekMaps.map(Todo.fromMap).toList();
+
+    // 按天归集 + 生成周几标签
+    const weekdays = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+    final daily = List<int>.filled(7, 0);
+    final labels = <String>[];
+    for (var i = 0; i < 7; i++) {
+      final d = weekStart.add(Duration(days: i));
+      final key = dateKey(d);
+      daily[i] =
+          weekDoneTodos.where((t) => t.completedAt != null && dateKey(t.completedAt!) == key).length;
+      labels.add(weekdays[d.weekday - 1]);
+    }
+
+    return TodoStats(
+      totalDue: dueTodos.length,
+      completed: completed,
+      pending: dueTodos.length - completed,
+      byCategory: TodoStats.groupByCategory(dueTodos),
+      byPriority: TodoStats.groupByPriority(dueTodos),
+      dailyCompleted: daily,
+      dailyLabels: labels,
+      dueTodos: dueTodos,
+      weekDoneTodos: weekDoneTodos,
+    );
   }
 
   /// 标记完成

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:buildself/core/constants/colors.dart';
+import 'package:buildself/core/router/routes.dart';
 import 'package:buildself/features/auth/providers/app_provider.dart';
 import 'package:buildself/features/todo/data/todo_repository.dart';
 import 'package:buildself/features/todo/models/todo_model.dart';
@@ -174,7 +175,18 @@ class _TodoListScreenState extends State<TodoListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('待办清单')),
+      appBar: AppBar(
+        title: const Text('待办清单'),
+        actions: [
+          IconButton(
+            icon: const EmojiIcon('📊', size: 21),
+            tooltip: '统计',
+            onPressed: () =>
+                Navigator.pushNamed(context, AppRoutes.todoStats),
+          ),
+          const SizedBox(width: 4),
+        ],
+      ),
       body: NexusBackground(
         child: SafeArea(
           child: Column(

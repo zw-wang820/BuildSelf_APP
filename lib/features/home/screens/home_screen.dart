@@ -100,20 +100,24 @@ class _HomeScreenState extends State<HomeScreen> {
 
   /// 加载首页待办预览 — 未完成优先（最多 8 条）+ 今日已完成补位（最多 4 条，删除线展示）
   /// 已完成的待办仅在当天（今日 0 点 ~ 23:59:59）保留展示，跨天后自动从首页消失
+  /// 未完成排序：截止日期升序（无截止排最后）→ 优先级高→低，再截取前 8 条
   Future<void> _loadTodos(String userId) async {
     try {
       // 先惰性补建到期重复实例
       await _todoRepo.ensureDueInstances(userId);
       final now = DateTime.now();
       final todayStart = DateTime(now.year, now.month, now.day);
-      final active = await _todoRepo.getAll(userId, completed: false, limit: 8);
+      // 未完成：全量取回后在内存排序，保证展示的是"最紧急"的前 8 条
+      final active = await _todoRepo.getAll(userId, completed: false);
+      active.sort(_compareActiveTodo);
+      final shownActive = active.take(8).toList();
       final done = await _todoRepo.getAll(
         userId,
         completed: true,
         completedAfter: todayStart,
         limit: 4,
       );
-      final todos = [...active, ...done];
+      final todos = [...shownActive, ...done];
       final count = await _todoRepo.getActiveCount(userId);
       if (mounted) {
         setState(() {
@@ -124,6 +128,29 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     } catch (_) {
       if (mounted) setState(() => _loadingTodos = false);
+    }
+  }
+
+  /// 未完成待办排序：截止日期升序（无截止排最后）→ 优先级高→低
+  int _compareActiveTodo(Todo a, Todo b) {
+    final da = a.dueDate;
+    final db = b.dueDate;
+    if (da == null && db == null) return 0;
+    if (da == null) return 1;
+    if (db == null) return -1;
+    final c = da.compareTo(db);
+    if (c != 0) return c;
+    return _priorityWeight(a.priority).compareTo(_priorityWeight(b.priority));
+  }
+
+  static int _priorityWeight(TodoPriority p) {
+    switch (p) {
+      case TodoPriority.high:
+        return 0;
+      case TodoPriority.medium:
+        return 1;
+      case TodoPriority.low:
+        return 2;
     }
   }
 

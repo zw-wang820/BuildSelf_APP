@@ -108,6 +108,15 @@ class DatabaseProvider {
         'CREATE INDEX IF NOT EXISTS idx_todos_repeat_origin ON ${AppTables.todos}(repeat_origin_id)',
       );
     }
+    // v6: 待办支持回收站（软删除）
+    if (oldVersion < 6) {
+      await db.execute(
+        'ALTER TABLE ${AppTables.todos} ADD COLUMN deleted_at TEXT',
+      );
+      await db.execute(
+        'ALTER TABLE ${AppTables.todos} ADD COLUMN updated_at TEXT',
+      );
+    }
   }
 
   // ==================== 通用 CRUD 方法 ====================
@@ -252,6 +261,9 @@ class DatabaseProvider {
         where: 'deleted_at IS NOT NULL AND deleted_at < ?', whereArgs: [purgeBefore.toIso8601String()]);
     // 清理 goals
     await db.delete(AppTables.goals,
+        where: 'deleted_at IS NOT NULL AND deleted_at < ?', whereArgs: [purgeBefore.toIso8601String()]);
+    // 清理 todos
+    await db.delete(AppTables.todos,
         where: 'deleted_at IS NOT NULL AND deleted_at < ?', whereArgs: [purgeBefore.toIso8601String()]);
 
     // 清理 trash_items

@@ -269,6 +269,7 @@ class _TodoListScreenState extends State<TodoListScreen> {
         return Dismissible(
           key: ValueKey(todo.id),
           direction: DismissDirection.endToStart,
+          confirmDismiss: (_) => _confirmDelete(todo),
           onDismissed: (_) => _deleteTodo(todo),
           background: _buildDeleteBackground(context),
           child: TodoItemCard(
@@ -295,12 +296,35 @@ class _TodoListScreenState extends State<TodoListScreen> {
     );
   }
 
-  /// 左滑删除待办
+  /// 左滑删除二次确认 — 防止误删；取消则卡片弹回，确认才移入回收站
+  Future<bool> _confirmDelete(Todo todo) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('移至回收站'),
+        content: Text('确定将「${todo.content}」移至回收站吗？可在回收站中恢复。'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('取消'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: TextButton.styleFrom(foregroundColor: AppColors.error),
+            child: const Text('移入回收站'),
+          ),
+        ],
+      ),
+    );
+    return confirmed == true;
+  }
+
+  /// 左滑删除待办 — 软删除移入回收站
   Future<void> _deleteTodo(Todo todo) async {
     setState(() => _todos.removeWhere((t) => t.id == todo.id));
     await _repo.delete(todo.id);
     if (!mounted) return;
-    ToastHelper.show(context, '🗑️ 待办已删除');
+    ToastHelper.show(context, '🗑️ 已移至回收站');
   }
 
   Widget _buildEmpty() {

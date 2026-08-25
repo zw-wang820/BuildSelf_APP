@@ -5,6 +5,7 @@ import 'package:buildself/core/constants/strings.dart';
 import 'package:buildself/data/database/tables.dart';
 import 'package:buildself/data/database/database_provider.dart';
 import 'package:buildself/features/auth/providers/app_provider.dart';
+import 'package:buildself/features/todo/models/todo_model.dart';
 import 'package:buildself/shared/widgets/app_card.dart';
 import 'package:buildself/shared/widgets/emoji_icon.dart';
 import 'package:buildself/shared/widgets/nexus_background.dart';
@@ -110,6 +111,29 @@ class _TrashScreenState extends State<TrashScreen> {
           moduleTag: 'MURMUR',
           moduleColor: AppColors.murmur,
           table: AppTables.murmurs,
+          deletedAt: DateTime.parse(m['deleted_at'] as String),
+        ));
+      }
+
+      // 待办
+      final todoMaps = await _db.queryAll(
+        AppTables.todos,
+        where: 'user_id = ? AND deleted_at IS NOT NULL',
+        whereArgs: [userId],
+        orderBy: 'deleted_at DESC',
+      );
+      for (final m in todoMaps) {
+        final catName = m['category'] as String?;
+        final catLabel = TodoCategory.values
+            .firstWhere((c) => c.name == catName, orElse: () => TodoCategory.work)
+            .label;
+        results.add(_TrashItem(
+          id: m['id'] as String,
+          title: m['content'] as String? ?? '',
+          subtitle: catLabel,
+          moduleTag: 'TODO',
+          moduleColor: AppColors.todo,
+          table: AppTables.todos,
           deletedAt: DateTime.parse(m['deleted_at'] as String),
         ));
       }

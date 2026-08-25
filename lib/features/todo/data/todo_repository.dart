@@ -52,7 +52,7 @@ class TodoRepository {
     DateTime? completedAfter,
     int? limit,
   }) async {
-    final where = <String>['user_id = ?'];
+    final where = <String>['user_id = ?', 'deleted_at IS NULL'];
     final args = <Object?>[userId];
     if (category != null) {
       where.add('category = ?');
@@ -77,11 +77,11 @@ class TodoRepository {
     return maps.map(Todo.fromMap).toList();
   }
 
-  /// 进行中（未完成）待办数量 — 用于首页数据条
+  /// 进行中（未完成）待办数量 — 用于首页数据条（不含回收站）
   Future<int> getActiveCount(String userId) async {
     final maps = await _db.queryAll(
       AppTables.todos,
-      where: 'user_id = ? AND is_completed = ?',
+      where: 'user_id = ? AND is_completed = ? AND deleted_at IS NULL',
       whereArgs: [userId, 0],
     );
     return maps.length;
@@ -99,10 +99,10 @@ class TodoRepository {
     final endIso = DateTime(end.year, end.month, end.day, 23, 59, 59)
         .toIso8601String();
 
-    // 1. 到期全集：due_date 落在区间（含已完成与未完成）
+    // 1. 到期全集：due_date 落在区间（含已完成与未完成，不含回收站）
     final dueMaps = await _db.queryAll(
       AppTables.todos,
-      where: 'user_id = ? AND due_date >= ? AND due_date <= ?',
+      where: 'user_id = ? AND due_date >= ? AND due_date <= ? AND deleted_at IS NULL',
       whereArgs: [userId, startIso, endIso],
     );
     final dueTodos = dueMaps.map(Todo.fromMap).toList();
@@ -114,7 +114,7 @@ class TodoRepository {
     final weekMaps = await _db.queryAll(
       AppTables.todos,
       where:
-          'user_id = ? AND is_completed = ? AND completed_at >= ? AND completed_at <= ?',
+          'user_id = ? AND is_completed = ? AND completed_at >= ? AND completed_at <= ? AND deleted_at IS NULL',
       whereArgs: [
         userId,
         1,
@@ -182,9 +182,9 @@ class TodoRepository {
     );
   }
 
-  /// 物理删除
+  /// 软删除 — 移入回收站（写 deleted_at），30 天后由 purgeExpiredTrash 物理清理
   Future<void> delete(String id) async {
-    await _db.delete(AppTables.todos, where: 'id = ?', whereArgs: [id]);
+    await _db.softDelete(AppTables.todos, id);
   }
 
   // ==================== 周期重复 ====================
@@ -233,7 +233,7 @@ class TodoRepository {
     final nowDate = now ?? DateTime.now();
     final maps = await _db.queryAll(
       AppTables.todos,
-      where: 'user_id = ? AND repeat_type != ?',
+      where: 'user_id = ? AND repeat_type != ? AND deleted_at IS NULL',
       whereArgs: [userId, TodoRepeatType.none.name],
     );
     if (maps.isEmpty) return 0;

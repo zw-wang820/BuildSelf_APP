@@ -7,6 +7,7 @@ import 'package:buildself/data/models/reading_models.dart';
 import 'package:buildself/data/repositories/reading_repository.dart';
 import 'package:buildself/features/auth/providers/app_provider.dart';
 import 'package:buildself/features/reading/widgets/add_book_sheet.dart';
+import 'package:buildself/shared/layouts/main_scaffold.dart';
 import 'package:buildself/shared/widgets/emoji_icon.dart';
 import 'package:buildself/shared/widgets/nexus_background.dart';
 import 'package:buildself/shared/widgets/toast.dart';
@@ -178,6 +179,8 @@ class _BookshelfScreenState extends State<BookshelfScreen> {
         foregroundColor: Colors.white,
         child: const EmojiIcon('➕', size: 22),
       ),
+      // tab 常驻页与 push 全屏页统一：FAB 抬到底栏上方，避免被毛玻璃底栏遮挡
+      floatingActionButtonLocation: const FloatingAboveNavLocation(),
     );
   }
 

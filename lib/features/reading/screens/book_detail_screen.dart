@@ -26,6 +26,10 @@ class _BookDetailScreenState extends State<BookDetailScreen>
   Book? _book;
   bool _loading = true;
 
+  /// 5 个 Tab 各自的笔记列表 key — 用于编辑/新建返回后强制刷新各列表
+  final List<GlobalKey<_NotesListState>> _notesKeys =
+      List.generate(5, (_) => GlobalKey<_NotesListState>());
+
   /// 5 个 Tab：全部 / 摘抄 / 心得 / 思考 / 改变
   /// 对应 noteTypeFilter: null=全部, 其余为 NoteType 值
   final List<NoteType?> _tabFilters = [
@@ -47,6 +51,13 @@ class _BookDetailScreenState extends State<BookDetailScreen>
   void dispose() {
     _tabController.dispose();
     super.dispose();
+  }
+
+  /// 笔记编辑/新建返回后刷新所有 Tab 的笔记列表（keepAlive 列表需主动触发）
+  void _refreshNotes() {
+    for (final key in _notesKeys) {
+      key.currentState?._loadNotes();
+    }
   }
 
   Future<void> _loadBook() async {
@@ -107,13 +118,16 @@ class _BookDetailScreenState extends State<BookDetailScreen>
                 Expanded(
                   child: TabBarView(
                     controller: _tabController,
-                    children: _tabFilters
-                        .map((filter) => _NotesList(
-                              repo: _repo,
-                              bookId: widget.bookId!,
-                              noteType: filter,
-                            ))
-                        .toList(),
+                    children: _tabFilters.asMap().entries.map((entry) {
+                      final i = entry.key;
+                      final filter = entry.value;
+                      return _NotesList(
+                        key: _notesKeys[i],
+                        repo: _repo,
+                        bookId: widget.bookId!,
+                        noteType: filter,
+                      );
+                    }).toList(),
                   ),
                 ),
               ],
@@ -125,9 +139,9 @@ class _BookDetailScreenState extends State<BookDetailScreen>
             AppRoutes.noteEdit,
             arguments: NoteEditArgs(bookId: widget.bookId!),
           );
-          // 返回后刷新笔记列表（每个 tab 内部自刷新）和书籍信息
+          // 返回后刷新书籍信息与所有 Tab 的笔记列表
           _loadBook();
-          setState(() {}); // 触发 _NotesList 重建以刷新数据
+          _refreshNotes();
         },
         backgroundColor: AppColors.reading,
         child: const EmojiIcon('➕', size: 22),
@@ -280,6 +294,8 @@ class _NotesListState extends State<_NotesList> with AutomaticKeepAliveClientMix
 
   Widget _buildNoteItem(ReadingNote note) {
     return GestureDetector(
+      // 点击进入编辑页（页内展示首次创建 / 最后修改时间）
+      onTap: () => _openEditNote(note),
       onLongPress: () => _showDeleteNoteDialog(note),
       child: Card(
         margin: const EdgeInsets.only(bottom: 10),
@@ -335,8 +351,28 @@ class _NotesListState extends State<_NotesList> with AutomaticKeepAliveClientMix
     );
   }
 
+  /// 打开笔记编辑页，返回后刷新当前列表
+  Future<void> _openEditNote(ReadingNote note) async {
+    await Navigator.pushNamed(
+      context,
+      AppRoutes.noteEdit,
+      arguments: NoteEditArgs(bookId: widget.bookId, note: note),
+    );
+    if (mounted) _loadNotes();
+  }
+
+  /// 列表时间显示：今天 → 今天 HH:mm；今年 → M月d日；跨年 → yyyy年M月d日
   String _formatDate(DateTime dt) {
-    return '${dt.month}/${dt.day}';
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final day = DateTime(dt.year, dt.month, dt.day);
+    if (day == today) {
+      final hh = dt.hour.toString().padLeft(2, '0');
+      final mm = dt.minute.toString().padLeft(2, '0');
+      return '今天 $hh:$mm';
+    }
+    if (dt.year == now.year) return '${dt.month}月${dt.day}日';
+    return '${dt.year}年${dt.month}月${dt.day}日';
   }
 
   void _showDeleteNoteDialog(ReadingNote note) {

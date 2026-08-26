@@ -106,7 +106,11 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
           onPressed: () => Navigator.pop(context),
           child: Text(AppStrings.cancel),
         ),
-        title: Text(AppStrings.newReadingNote),
+        title: Text(
+          widget.args?.note != null
+              ? AppStrings.editReadingNote
+              : AppStrings.newReadingNote,
+        ),
         actions: [
           TextButton(
             onPressed: _saving ? null : _save,
@@ -119,6 +123,11 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // 编辑模式：展示首次创建 / 最后修改时间
+            if (widget.args?.note != null) ...[
+              _buildTimeInfo(widget.args!.note!),
+              const SizedBox(height: 16),
+            ],
             // 笔记类型选择
             Wrap(
               spacing: 8,
@@ -160,6 +169,45 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
         ),
       ),
     );
+  }
+
+  /// 时间信息行 — 编辑模式展示首次创建与最后修改时间
+  Widget _buildTimeInfo(ReadingNote note) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: AppColors.reading.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '🕐 ${AppStrings.noteCreatedAt}：${_formatFull(note.createdAt)}',
+            style: TextStyle(
+              fontSize: 12,
+              color: AppColors.textSecondary(context),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '✏️ ${AppStrings.noteUpdatedAt}：${_formatFull(note.updatedAt)}',
+            style: TextStyle(
+              fontSize: 12,
+              color: AppColors.textSecondary(context),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 完整时间格式：yyyy年M月d日 HH:mm
+  String _formatFull(DateTime dt) {
+    final hh = dt.hour.toString().padLeft(2, '0');
+    final mm = dt.minute.toString().padLeft(2, '0');
+    return '${dt.year}年${dt.month}月${dt.day}日 $hh:$mm';
   }
 
   String _getHintByType(NoteType type) {

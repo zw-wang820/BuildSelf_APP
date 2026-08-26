@@ -112,6 +112,9 @@ class AppStrings {
   static String get noteThought => _t('noteThought');
   static String get noteChange => _t('noteChange');
   static String get newReadingNote => _t('newReadingNote');
+  static String get editReadingNote => _t('editReadingNote');
+  static String get noteCreatedAt => _t('noteCreatedAt');
+  static String get noteUpdatedAt => _t('noteUpdatedAt');
 
   // ============ 碎碎念模块 ============
   static String get murmurTitle => _t('murmurTitle');
@@ -241,6 +244,9 @@ class AppStrings {
       'noteThought': '思考',
       'noteChange': '改变',
       'newReadingNote': '新建笔记',
+      'editReadingNote': '编辑笔记',
+      'noteCreatedAt': '首次创建',
+      'noteUpdatedAt': '最后修改',
       'murmurTitle': '碎碎念',
       'murmurHint': '此刻在想什么...',
       'murmurSave': '记下',
@@ -361,6 +367,9 @@ class AppStrings {
       'noteThought': '思考',
       'noteChange': '改變',
       'newReadingNote': '新建筆記',
+      'editReadingNote': '編輯筆記',
+      'noteCreatedAt': '首次創建',
+      'noteUpdatedAt': '最後修改',
       'murmurTitle': '碎碎念',
       'murmurHint': '此刻在想什麼...',
       'murmurSave': '記下',
@@ -481,6 +490,9 @@ class AppStrings {
       'noteThought': 'Thought',
       'noteChange': 'Change',
       'newReadingNote': 'New Note',
+      'editReadingNote': 'Edit Note',
+      'noteCreatedAt': 'Created',
+      'noteUpdatedAt': 'Last modified',
       'murmurTitle': 'Murmurs',
       'murmurHint': 'What are you thinking...',
       'murmurSave': 'Save',

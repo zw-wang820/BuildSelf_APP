@@ -259,13 +259,21 @@ class Todo {
     );
   }
 
-  /// 截止文案：相对类型直接显示「今天/明天/后天」；自定义显示 MM/DD
+  /// 截止文案：基于 dueDate 与"今天"动态计算
+  /// 今天/明天/昨天 → 相对文案；更早/更晚 → MM/DD；无 dueDate 回退到类型文案
   String get dueLabel {
-    if (dueType == TodoDueType.custom && dueDate != null) {
-      final d = dueDate!;
-      return '${d.month.toString().padLeft(2, '0')}/${d.day.toString().padLeft(2, '0')}';
+    final due = dueDate;
+    if (due == null) {
+      return dueType == TodoDueType.custom ? '未设日期' : dueType.label;
     }
-    return dueType.label;
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final dueDay = DateTime(due.year, due.month, due.day);
+    final diff = dueDay.difference(today).inDays;
+    if (diff == 0) return '今天';
+    if (diff == 1) return '明天';
+    if (diff == -1) return '昨天';
+    return '${due.month.toString().padLeft(2, '0')}/${due.day.toString().padLeft(2, '0')}';
   }
 
   /// 是否逾期（未完成且截止日早于今天 0 点）

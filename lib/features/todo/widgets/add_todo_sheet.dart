@@ -131,6 +131,18 @@ class _AddTodoSheetState extends State<_AddTodoSheet> {
       _priority = t.priority;
       _dueType = t.dueType;
       _customDueDate = t.dueDate;
+      // 相对截止（今天/明天/后天）已不再匹配当前日期时，回退为"自定义"原日期，
+      // 避免保存时被 _resolveDueDate 按今天重算导致截止日期被篡改
+      final d = t.dueDate;
+      if (d != null && t.dueType != TodoDueType.custom) {
+        final now = DateTime.now();
+        final today = DateTime(now.year, now.month, now.day);
+        final dueDay = DateTime(d.year, d.month, d.day);
+        final diff = dueDay.difference(today).inDays;
+        if (diff < 0 || diff > 2) {
+          _dueType = TodoDueType.custom;
+        }
+      }
       final r = t.repeat;
       if (r != null && !r.isNone) {
         _repeatType = r.type;
@@ -170,8 +182,23 @@ class _AddTodoSheetState extends State<_AddTodoSheet> {
     }
   }
 
-  Future<void> _pickCustomDate() async {
+  /// 创建时间展示文案：今天/昨天 HH:mm；同年 MM/DD HH:mm；跨年 YYYY/MM/DD HH:mm
+  String _formatCreated(DateTime t) {
     final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final day = DateTime(t.year, t.month, t.day);
+    final diff = day.difference(today).inDays;
+    final hm =
+        '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
+    if (diff == 0) return '今天 $hm';
+    if (diff == -1) return '昨天 $hm';
+    if (t.year == now.year) {
+      return '${t.month.toString().padLeft(2, '0')}/${t.day.toString().padLeft(2, '0')} $hm';
+    }
+    return '${t.year}/${t.month.toString().padLeft(2, '0')}/${t.day.toString().padLeft(2, '0')} $hm';
+  }
+
+  Future<void> _pickCustomDate() async {    final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final picked = await showDatePicker(
       context: context,
@@ -291,6 +318,16 @@ class _AddTodoSheetState extends State<_AddTodoSheet> {
                   color: AppColors.textPrimary(context),
                 ),
               ),
+              if (widget.isEdit) ...[
+                const SizedBox(height: 6),
+                Text(
+                  '🕐 创建于 ${_formatCreated(widget.todo!.createdAt)}',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textSecondary(context),
+                  ),
+                ),
+              ],
               const SizedBox(height: 18),
               // 待办内容
               TextField(

@@ -283,4 +283,42 @@ class Todo {
     final midnight = DateTime(now.year, now.month, now.day);
     return dueDate!.isBefore(midnight);
   }
+
+  // ==================== 排序 ====================
+
+  /// 未完成段排序：截止日期升序（无截止排最后）→ 优先级高→低
+  /// 首页"今日待办"与待办清单页共用
+  static int compareActive(Todo a, Todo b) {
+    final da = a.dueDate;
+    final db = b.dueDate;
+    if (da == null && db == null) return 0;
+    if (da == null) return 1;
+    if (db == null) return -1;
+    final c = da.compareTo(db);
+    if (c != 0) return c;
+    return _priorityWeight(a.priority).compareTo(_priorityWeight(b.priority));
+  }
+
+  /// 列表页完整排序：未完成优先 → 未完成按 [compareActive] → 已完成按完成时间倒序
+  static int compareForList(Todo a, Todo b) {
+    if (a.isCompleted != b.isCompleted) return a.isCompleted ? 1 : -1;
+    if (!a.isCompleted) return compareActive(a, b);
+    final ca = a.completedAt;
+    final cb = b.completedAt;
+    if (ca == null && cb == null) return 0;
+    if (ca == null) return 1;
+    if (cb == null) return -1;
+    return cb.compareTo(ca);
+  }
+
+  static int _priorityWeight(TodoPriority p) {
+    switch (p) {
+      case TodoPriority.high:
+        return 0;
+      case TodoPriority.medium:
+        return 1;
+      case TodoPriority.low:
+        return 2;
+    }
+  }
 }

@@ -109,7 +109,7 @@ class _HomeScreenState extends State<HomeScreen> {
       final todayStart = DateTime(now.year, now.month, now.day);
       // 未完成：全量取回后在内存排序，保证展示的是"最紧急"的前 8 条
       final active = await _todoRepo.getAll(userId, completed: false);
-      active.sort(_compareActiveTodo);
+      active.sort(Todo.compareActive);
       final shownActive = active.take(8).toList();
       final done = await _todoRepo.getAll(
         userId,
@@ -128,29 +128,6 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     } catch (_) {
       if (mounted) setState(() => _loadingTodos = false);
-    }
-  }
-
-  /// 未完成待办排序：截止日期升序（无截止排最后）→ 优先级高→低
-  int _compareActiveTodo(Todo a, Todo b) {
-    final da = a.dueDate;
-    final db = b.dueDate;
-    if (da == null && db == null) return 0;
-    if (da == null) return 1;
-    if (db == null) return -1;
-    final c = da.compareTo(db);
-    if (c != 0) return c;
-    return _priorityWeight(a.priority).compareTo(_priorityWeight(b.priority));
-  }
-
-  static int _priorityWeight(TodoPriority p) {
-    switch (p) {
-      case TodoPriority.high:
-        return 0;
-      case TodoPriority.medium:
-        return 1;
-      case TodoPriority.low:
-        return 2;
     }
   }
 

@@ -92,6 +92,8 @@ class _TodoListScreenState extends State<TodoListScreen> {
       category: _filter.category,
       completed: _filter.completed,
     );
+    // 与首页一致：未完成优先 → 未完成按截止日期→优先级；已完成按完成时间倒序
+    list.sort(Todo.compareForList);
     if (mounted) setState(() {
       _todos = list;
       _loading = false;

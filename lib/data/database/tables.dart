@@ -14,6 +14,7 @@ class AppTables {
   static const String tags = 'tags';
   static const String trashItems = 'trash_items';
   static const String todos = 'todos';
+  static const String todoCategories = 'todo_categories';
   static const String habits = 'habits';
   static const String habitLogs = 'habit_logs';
 }
@@ -211,6 +212,19 @@ class AppSql {
     )
   ''';
 
+  /// 待办自定义分类表 — 内置四类（work/life/reading/study）为代码常量，不入库
+  static const String createTodoCategories = '''
+    CREATE TABLE IF NOT EXISTS ${AppTables.todoCategories} (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      name TEXT NOT NULL,
+      emoji TEXT NOT NULL DEFAULT '🏷️',
+      color_index INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL,
+      FOREIGN KEY (user_id) REFERENCES ${AppTables.users}(user_id)
+    )
+  ''';
+
   static const String createHabitLogs = '''
     CREATE TABLE IF NOT EXISTS ${AppTables.habitLogs} (
       id TEXT PRIMARY KEY,
@@ -233,6 +247,7 @@ class AppSql {
     createTags,
     createTrashItems,
     createTodos,
+    createTodoCategories,
     createHabits,
     createHabitLogs,
   ];
@@ -252,6 +267,7 @@ class AppSql {
     'CREATE INDEX IF NOT EXISTS idx_murmurs_deleted ON ${AppTables.murmurs}(deleted_at)',
     'CREATE INDEX IF NOT EXISTS idx_todos_user ON ${AppTables.todos}(user_id)',
     'CREATE INDEX IF NOT EXISTS idx_todos_repeat_origin ON ${AppTables.todos}(repeat_origin_id)',
+    'CREATE INDEX IF NOT EXISTS idx_todo_categories_user ON ${AppTables.todoCategories}(user_id)',
     'CREATE INDEX IF NOT EXISTS idx_habits_user ON ${AppTables.habits}(user_id)',
     'CREATE INDEX IF NOT EXISTS idx_habit_logs_habit ON ${AppTables.habitLogs}(habit_id)',
     'CREATE INDEX IF NOT EXISTS idx_habit_logs_date ON ${AppTables.habitLogs}(date)',

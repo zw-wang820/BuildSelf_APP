@@ -151,7 +151,9 @@ class Todo {
   final String userId;
   final String content;
   final String note;
-  final TodoCategory category;
+
+  /// 分类名：内置枚举 name（work/life/reading/study）或自定义分类名
+  final String category;
   final TodoPriority priority;
   final TodoDueType dueType;
   final DateTime? dueDate;
@@ -183,12 +185,16 @@ class Todo {
   /// 重复摘要（卡片徽章用）：每周五
   String? get repeatLabel => isRepeat ? repeat!.label(due: dueDate) : null;
 
+  /// 是否内置分类
+  bool get isBuiltinCategory =>
+      TodoCategory.values.any((c) => c.name == category);
+
   Map<String, dynamic> toMap() => {
         'id': id,
         'user_id': userId,
         'content': content,
         'note': note,
-        'category': category.name,
+        'category': category,
         'priority': priority.name,
         'due_type': dueType.name,
         'due_date': dueDate?.toIso8601String(),
@@ -205,10 +211,7 @@ class Todo {
       userId: map['user_id'] as String,
       content: (map['content'] as String?) ?? '',
       note: (map['note'] as String?) ?? '',
-      category: TodoCategory.values.firstWhere(
-        (e) => e.name == map['category'],
-        orElse: () => TodoCategory.work,
-      ),
+      category: (map['category'] as String?) ?? TodoCategory.work.name,
       priority: TodoPriority.values.firstWhere(
         (e) => e.name == map['priority'],
         orElse: () => TodoPriority.medium,
@@ -233,7 +236,7 @@ class Todo {
   Todo copyWith({
     String? content,
     String? note,
-    TodoCategory? category,
+    String? category,
     TodoPriority? priority,
     TodoDueType? dueType,
     DateTime? dueDate,

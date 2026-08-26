@@ -117,6 +117,13 @@ class DatabaseProvider {
         'ALTER TABLE ${AppTables.todos} ADD COLUMN updated_at TEXT',
       );
     }
+    // v7: 待办自定义分类表
+    if (oldVersion < 7) {
+      await db.execute(AppSql.createTodoCategories);
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_todo_categories_user ON ${AppTables.todoCategories}(user_id)',
+      );
+    }
   }
 
   // ==================== 通用 CRUD 方法 ====================

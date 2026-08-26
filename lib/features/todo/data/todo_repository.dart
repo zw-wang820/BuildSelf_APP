@@ -1,6 +1,7 @@
 import 'package:uuid/uuid.dart';
 import 'package:buildself/data/database/database_provider.dart';
 import 'package:buildself/data/database/tables.dart';
+import 'package:buildself/features/todo/models/todo_category_info.dart';
 import 'package:buildself/features/todo/models/todo_model.dart';
 import 'package:buildself/features/todo/models/todo_stats.dart';
 
@@ -15,7 +16,7 @@ class TodoRepository {
     required String userId,
     required String content,
     String note = '',
-    required TodoCategory category,
+    required String category,
     required TodoPriority priority,
     required TodoDueType dueType,
     DateTime? dueDate,
@@ -42,12 +43,12 @@ class TodoRepository {
   }
 
   /// 列表查询
-  /// [category] 指定分类过滤；[completed] 为 true 仅已完成、false 仅未完成、null 全部
+  /// [category] 指定分类名过滤；[completed] 为 true 仅已完成、false 仅未完成、null 全部
   /// [completedAfter] 仅当 [completed] 为 true 时生效：只取完成时间不早于该时刻的记录（如"今天 0 点"）
   /// [limit] 限制返回条数（预览场景使用）
   Future<List<Todo>> getAll(
     String userId, {
-    TodoCategory? category,
+    String? category,
     bool? completed,
     DateTime? completedAfter,
     int? limit,
@@ -56,7 +57,7 @@ class TodoRepository {
     final args = <Object?>[userId];
     if (category != null) {
       where.add('category = ?');
-      args.add(category.name);
+      args.add(category);
     }
     if (completed != null) {
       where.add('is_completed = ?');
@@ -85,6 +86,126 @@ class TodoRepository {
       whereArgs: [userId, 0],
     );
     return maps.length;
+  }
+
+  // ==================== 自定义分类 ====================
+
+  /// 查询自定义分类列表（按创建时间正序）
+  Future<List<TodoCategoryInfo>> getCustomCategories(String userId) async {
+    final maps = await _db.queryAll(
+      AppTables.todoCategories,
+      where: 'user_id = ?',
+      whereArgs: [userId],
+      orderBy: 'created_at ASC',
+    );
+    return maps.map((m) {
+      final colorIndex = (m['color_index'] as int?) ?? 0;
+      return TodoCategoryInfo.custom(
+        id: m['id'] as String,
+        name: m['name'] as String,
+        emoji: (m['emoji'] as String?) ?? '🏷️',
+        colorIndex: colorIndex,
+      );
+    }).toList();
+  }
+
+  /// 分类名是否可用（不与内置四类名称/标签、已有自定义重名）
+  Future<bool> isCategoryNameAvailable(String userId, String name) async {
+    final trimmed = name.trim();
+    if (trimmed.isEmpty) return false;
+    if (TodoCategory.values
+        .any((c) => c.name == trimmed || c.label == trimmed)) {
+      return false;
+    }
+    final maps = await _db.queryAll(
+      AppTables.todoCategories,
+      where: 'user_id = ? AND name = ?',
+      whereArgs: [userId, trimmed],
+      limit: 1,
+    );
+    return maps.isEmpty;
+  }
+
+  /// 新增自定义分类 — 重名返回 null；颜色自动取色板下一未用色
+  Future<TodoCategoryInfo?> addCustomCategory(
+    String userId, {
+    required String name,
+    required String emoji,
+  }) async {
+    final trimmed = name.trim();
+    if (!await isCategoryNameAvailable(userId, trimmed)) return null;
+    final customs = await getCustomCategories(userId);
+    var maxIdx = -1;
+    for (final c in customs) {
+      final idx = customCategoryPalette.indexOf(c.color);
+      if (idx > maxIdx) maxIdx = idx;
+    }
+    final colorIndex = (maxIdx + 1) % customCategoryPalette.length;
+    final id = _uuid.v4();
+    await _db.insert(AppTables.todoCategories, {
+      'id': id,
+      'user_id': userId,
+      'name': trimmed,
+      'emoji': emoji,
+      'color_index': colorIndex,
+      'created_at': DateTime.now().toIso8601String(),
+    });
+    return TodoCategoryInfo.custom(
+      id: id,
+      name: trimmed,
+      emoji: emoji,
+      colorIndex: colorIndex,
+    );
+  }
+
+  /// 重命名自定义分类 — 同步更新其下全部待办（含回收站）
+  Future<bool> renameCustomCategory(
+    String userId, {
+    required String id,
+    required String oldName,
+    required String newName,
+  }) async {
+    final trimmed = newName.trim();
+    if (trimmed.isEmpty || trimmed == oldName) return false;
+    if (!await isCategoryNameAvailable(userId, trimmed)) return false;
+    final now = DateTime.now().toIso8601String();
+    await _db.transaction((txn) async {
+      await txn.update(
+        AppTables.todoCategories,
+        {'name': trimmed},
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+      await txn.update(
+        AppTables.todos,
+        {'category': trimmed, 'updated_at': now},
+        where: 'user_id = ? AND category = ?',
+        whereArgs: [userId, oldName],
+      );
+    });
+    return true;
+  }
+
+  /// 删除自定义分类 — 该分类下待办（含回收站）归入「工作」
+  Future<void> deleteCustomCategory(
+    String userId, {
+    required String id,
+    required String name,
+  }) async {
+    final now = DateTime.now().toIso8601String();
+    await _db.transaction((txn) async {
+      await txn.delete(
+        AppTables.todoCategories,
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+      await txn.update(
+        AppTables.todos,
+        {'category': TodoCategory.work.name, 'updated_at': now},
+        where: 'user_id = ? AND category = ?',
+        whereArgs: [userId, name],
+      );
+    });
   }
 
   /// 统计 — 时间段内到期口径（due_date 落在 [start, end]，含边界日 23:59:59）
@@ -124,6 +245,9 @@ class TodoRepository {
     );
     final weekDoneTodos = weekMaps.map(Todo.fromMap).toList();
 
+    // 自定义分类（按分类统计分组用）
+    final customs = await getCustomCategories(userId);
+
     // 按天归集 + 生成周几标签
     const weekdays = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
     final daily = List<int>.filled(7, 0);
@@ -140,12 +264,13 @@ class TodoRepository {
       totalDue: dueTodos.length,
       completed: completed,
       pending: dueTodos.length - completed,
-      byCategory: TodoStats.groupByCategory(dueTodos),
+      byCategory: TodoStats.groupByCategory(dueTodos, customs: customs),
       byPriority: TodoStats.groupByPriority(dueTodos),
       dailyCompleted: daily,
       dailyLabels: labels,
       dueTodos: dueTodos,
       weekDoneTodos: weekDoneTodos,
+      customs: customs,
     );
   }
 

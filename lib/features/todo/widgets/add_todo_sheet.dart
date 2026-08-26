@@ -1,9 +1,184 @@
 import 'package:flutter/material.dart';
 import 'package:buildself/core/constants/colors.dart';
 import 'package:buildself/features/todo/data/todo_repository.dart';
+import 'package:buildself/features/todo/models/todo_category_info.dart';
 import 'package:buildself/features/todo/models/todo_model.dart';
 import 'package:buildself/shared/widgets/gradient_button.dart';
 import 'package:buildself/shared/widgets/toast.dart';
+
+/// 新建分类候选 emoji
+const List<String> categoryEmojis = [
+  '💼', '🌿', '📖', '📚', '🏃', '💪', '📌', '⭐', '🎯', '✈️', '💻', '🎨',
+];
+
+/// 弹出「新建分类」底部表单 — 名称 + emoji 选择，颜色自动分配
+/// 创建成功调用 [onCreated] 并关闭；重名时 Toast 提示
+Future<void> showAddCategorySheet(
+  BuildContext context, {
+  required String userId,
+  required TodoRepository repository,
+  required ValueChanged<TodoCategoryInfo> onCreated,
+}) {
+  return showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (_) => _AddCategorySheet(
+      userId: userId,
+      repository: repository,
+      onCreated: onCreated,
+    ),
+  );
+}
+
+/// 新建分类表单
+class _AddCategorySheet extends StatefulWidget {
+  final String userId;
+  final TodoRepository repository;
+  final ValueChanged<TodoCategoryInfo> onCreated;
+
+  const _AddCategorySheet({
+    required this.userId,
+    required this.repository,
+    required this.onCreated,
+  });
+
+  @override
+  State<_AddCategorySheet> createState() => _AddCategorySheetState();
+}
+
+class _AddCategorySheetState extends State<_AddCategorySheet> {
+  final _nameCtrl = TextEditingController();
+  String _emoji = categoryEmojis.first;
+  bool _creating = false;
+
+  @override
+  void dispose() {
+    _nameCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _create() async {
+    final name = _nameCtrl.text.trim();
+    if (name.isEmpty) {
+      ToastHelper.show(context, '请输入分类名称', icon: Icons.info_outline);
+      return;
+    }
+    if (_creating) return;
+    setState(() => _creating = true);
+    final info = await widget.repository
+        .addCustomCategory(widget.userId, name: name, emoji: _emoji);
+    if (!mounted) return;
+    if (info == null) {
+      ToastHelper.show(context, '该分类已存在', icon: Icons.error_outline);
+      setState(() => _creating = false);
+      return;
+    }
+    widget.onCreated(info);
+    Navigator.of(context).pop();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final surface = isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
+    final divider = isDark ? AppColors.dividerDark : AppColors.dividerLight;
+    return Container(
+      decoration: BoxDecoration(
+        color: surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      padding: EdgeInsets.only(
+        left: 20,
+        right: 20,
+        top: 12,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: divider,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              '新建分类',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary(context),
+              ),
+            ),
+            const SizedBox(height: 18),
+            TextField(
+              controller: _nameCtrl,
+              maxLength: 6,
+              decoration: const InputDecoration(
+                labelText: '分类名称',
+                hintText: '如：健身、重要',
+                counterText: '',
+              ),
+              textInputAction: TextInputAction.done,
+              onSubmitted: (_) => _create(),
+            ),
+            const SizedBox(height: 14),
+            Text(
+              '选择图标',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textSecondary(context),
+              ),
+            ),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: categoryEmojis.map((e) {
+                final selected = _emoji == e;
+                return GestureDetector(
+                  onTap: () => setState(() => _emoji = e),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 150),
+                    width: 40,
+                    height: 40,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: selected
+                          ? AppColors.primary.withValues(alpha: 0.14)
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: selected ? AppColors.primary : divider,
+                        width: selected ? 1.4 : 1,
+                      ),
+                    ),
+                    child: Text(e, style: const TextStyle(fontSize: 18)),
+                  ),
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 20),
+            GradientButton(
+              label: _creating ? '创建中…' : '创建分类',
+              icon: Icons.add,
+              onPressed: _creating ? null : _create,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
 /// 弹出「新建待办」底部表单
 ///
@@ -72,11 +247,15 @@ class _AddTodoSheetState extends State<_AddTodoSheet> {
   final _contentCtrl = TextEditingController();
   final _noteCtrl = TextEditingController();
 
-  TodoCategory _category = TodoCategory.work;
+  /// 当前分类名（内置枚举名 或 自定义分类名）
+  String _category = TodoCategory.work.name;
   TodoPriority _priority = TodoPriority.medium;
   TodoDueType _dueType = TodoDueType.today;
   DateTime? _customDueDate;
   bool _creating = false;
+
+  // 自定义分类
+  List<TodoCategoryInfo> _customCategories = [];
 
   // 重复设置
   TodoRepeatType _repeatType = TodoRepeatType.none;
@@ -87,7 +266,30 @@ class _AddTodoSheetState extends State<_AddTodoSheet> {
   bool _repeatEndByDate = false; // 终止方式：按日期
   DateTime? _repeatEndDate;
 
+  /// 当前用户 id（新建传参；编辑取待办自身的 userId）
+  String get _userId =>
+      widget.userId.isNotEmpty ? widget.userId : (widget.todo?.userId ?? '');
+
   bool get _isRepeat => _repeatType != TodoRepeatType.none;
+
+  /// 加载自定义分类；编辑时若当前分类已不存在（被删）则回退「工作」
+  Future<void> _loadCustomCategories() async {
+    final uid = _userId;
+    if (uid.isEmpty) return;
+    final list = await widget.repository.getCustomCategories(uid);
+    if (!mounted) return;
+    setState(() {
+      _customCategories = list;
+      if (widget.todo != null &&
+          !_isValidCategory(_category) &&
+          !list.any((c) => c.name == _category)) {
+        _category = TodoCategory.work.name;
+      }
+    });
+  }
+
+  bool _isValidCategory(String name) =>
+      TodoCategory.values.any((c) => c.name == name);
 
   /// 依据表单组装重复规则（不重复返回 null）
   TodoRepeat? _buildRepeat() {
@@ -157,6 +359,7 @@ class _AddTodoSheetState extends State<_AddTodoSheet> {
         }
       }
     }
+    _loadCustomCategories();
   }
 
   @override
@@ -361,44 +564,21 @@ class _AddTodoSheetState extends State<_AddTodoSheet> {
               Wrap(
                 spacing: 10,
                 runSpacing: 10,
-                children: TodoCategory.values.map((cat) {
-                  final selected = _category == cat;
-                  return GestureDetector(
-                    onTap: () => setState(() => _category = cat),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 180),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 9),
-                      decoration: BoxDecoration(
-                        color: selected
-                            ? cat.color.withValues(alpha: 0.16)
-                            : Colors.transparent,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                          color: selected ? cat.color : divider,
-                          width: selected ? 1.4 : 1,
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(cat.emoji, style: const TextStyle(fontSize: 15)),
-                          const SizedBox(width: 5),
-                          Text(
-                            cat.label,
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: selected
-                                  ? cat.color
-                                  : AppColors.textPrimary(context),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                }).toList(),
+                children: [
+                  ...TodoCategory.values.map((cat) => _buildCategoryChip(
+                        name: cat.name,
+                        label: cat.label,
+                        emoji: cat.emoji,
+                        color: cat.color,
+                      )),
+                  ..._customCategories.map((c) => _buildCategoryChip(
+                        name: c.name,
+                        label: c.label,
+                        emoji: c.emoji,
+                        color: c.color,
+                      )),
+                  _buildNewCategoryChip(),
+                ],
               ),
               const SizedBox(height: 18),
               // 优先级
@@ -669,6 +849,96 @@ class _AddTodoSheetState extends State<_AddTodoSheet> {
           ),
         ),
       ),
+    );
+  }
+
+  /// 分类 chip（内置 / 自定义共用）
+  Widget _buildCategoryChip({
+    required String name,
+    required String label,
+    required String emoji,
+    required Color color,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final dividerColor = isDark ? AppColors.dividerDark : AppColors.dividerLight;
+    final selected = _category == name;
+    return GestureDetector(
+      onTap: () => setState(() => _category = name),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+        decoration: BoxDecoration(
+          color: selected ? color.withValues(alpha: 0.16) : Colors.transparent,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: selected ? color : dividerColor,
+            width: selected ? 1.4 : 1,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(emoji, style: const TextStyle(fontSize: 15)),
+            const SizedBox(width: 5),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: selected ? color : AppColors.textPrimary(context),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 「＋ 新建分类」chip
+  Widget _buildNewCategoryChip() {
+    return GestureDetector(
+      onTap: _showAddCategory,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+        decoration: BoxDecoration(
+          color: AppColors.primary.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: AppColors.primary.withValues(alpha: 0.4)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('➕', style: TextStyle(fontSize: 14)),
+            const SizedBox(width: 4),
+            Text(
+              '新建分类',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: AppColors.primary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 新建分类 — 复用公共弹窗，成功后加入列表并自动选中
+  Future<void> _showAddCategory() async {
+    final uid = _userId;
+    if (uid.isEmpty) return;
+    await showAddCategorySheet(
+      context,
+      userId: uid,
+      repository: widget.repository,
+      onCreated: (info) {
+        setState(() {
+          _customCategories = [..._customCategories, info];
+          _category = info.name;
+        });
+      },
     );
   }
 

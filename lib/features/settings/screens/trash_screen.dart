@@ -5,7 +5,8 @@ import 'package:buildself/core/constants/strings.dart';
 import 'package:buildself/data/database/tables.dart';
 import 'package:buildself/data/database/database_provider.dart';
 import 'package:buildself/features/auth/providers/app_provider.dart';
-import 'package:buildself/features/todo/models/todo_model.dart';
+import 'package:buildself/features/todo/data/todo_repository.dart';
+import 'package:buildself/features/todo/models/todo_category_info.dart';
 import 'package:buildself/shared/widgets/app_card.dart';
 import 'package:buildself/shared/widgets/emoji_icon.dart';
 import 'package:buildself/shared/widgets/nexus_background.dart';
@@ -115,18 +116,18 @@ class _TrashScreenState extends State<TrashScreen> {
         ));
       }
 
-      // 待办
+      // 待办（自定义分类名经 todo_categories 解析）
       final todoMaps = await _db.queryAll(
         AppTables.todos,
         where: 'user_id = ? AND deleted_at IS NOT NULL',
         whereArgs: [userId],
         orderBy: 'deleted_at DESC',
       );
+      final customs = await TodoRepository().getCustomCategories(userId);
       for (final m in todoMaps) {
-        final catName = m['category'] as String?;
-        final catLabel = TodoCategory.values
-            .firstWhere((c) => c.name == catName, orElse: () => TodoCategory.work)
-            .label;
+        final catName = m['category'] as String? ?? '';
+        final catLabel =
+            TodoCategoryInfo.resolve(catName, customs).label;
         results.add(_TrashItem(
           id: m['id'] as String,
           title: m['content'] as String? ?? '',

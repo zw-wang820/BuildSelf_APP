@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:buildself/features/todo/models/todo_category_info.dart';
 import 'package:buildself/features/todo/models/todo_model.dart';
 
 /// 单个维度（分类 / 优先级）的统计结果
@@ -66,6 +67,9 @@ class TodoStats {
   /// 近 7 天已完成全集（趋势柱下钻用）
   final List<Todo> weekDoneTodos;
 
+  /// 自定义分类列表（下钻明细徽章解析用）
+  final List<TodoCategoryInfo> customs;
+
   const TodoStats({
     required this.totalDue,
     required this.completed,
@@ -76,24 +80,43 @@ class TodoStats {
     required this.dailyLabels,
     required this.dueTodos,
     required this.weekDoneTodos,
+    this.customs = const [],
   });
 
   /// 完成率 0~1（无到期数据为 0）
   double get rate => totalDue == 0 ? 0 : completed / totalDue;
 
-  /// 按分类统计（仅统计维度为分类时展示）
-  static List<TodoStatsGroup> groupByCategory(List<Todo> todos) {
-    return TodoCategory.values.map((c) {
-      final inCat = todos.where((t) => t.category == c).toList();
-      return TodoStatsGroup(
-        key: c.name,
-        label: c.label,
-        emoji: c.emoji,
-        color: c.color,
-        total: inCat.length,
-        completed: inCat.where((t) => t.isCompleted).length,
-      );
-    }).toList();
+  /// 按分类统计（内置 + 自定义；仅统计维度为分类时展示）
+  static List<TodoStatsGroup> groupByCategory(
+    List<Todo> todos, {
+    List<TodoCategoryInfo> customs = const [],
+  }) {
+    final groups = <TodoStatsGroup>[
+      for (final c in TodoCategory.values)
+        _group(todos.where((t) => t.category == c.name).toList(),
+            c.name, c.label, c.emoji, c.color),
+      for (final c in customs)
+        _group(todos.where((t) => t.category == c.name).toList(),
+            c.name, c.label, c.emoji, c.color),
+    ];
+    return groups;
+  }
+
+  static TodoStatsGroup _group(
+    List<Todo> inCat,
+    String key,
+    String label,
+    String emoji,
+    Color color,
+  ) {
+    return TodoStatsGroup(
+      key: key,
+      label: label,
+      emoji: emoji,
+      color: color,
+      total: inCat.length,
+      completed: inCat.where((t) => t.isCompleted).length,
+    );
   }
 
   /// 按优先级统计

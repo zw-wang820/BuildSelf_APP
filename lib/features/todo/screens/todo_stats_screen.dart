@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:buildself/core/constants/colors.dart';
 import 'package:buildself/features/auth/providers/app_provider.dart';
 import 'package:buildself/features/todo/data/todo_repository.dart';
+import 'package:buildself/features/todo/models/todo_category_info.dart';
 import 'package:buildself/features/todo/models/todo_model.dart';
 import 'package:buildself/features/todo/models/todo_stats.dart';
 import 'package:buildself/features/todo/widgets/add_todo_sheet.dart';
@@ -128,14 +129,15 @@ class _TodoStatsScreenState extends State<TodoStatsScreen> {
   /// 标签行下钻 — 该标签 + 时间段内到期待办（未完成在前）
   void _openGroupDetail(TodoStats stats, TodoStatsGroup group) {
     final list = stats.dueTodos.where((t) {
-      if (_dim == _StatsDim.category) return t.category.name == group.key;
+      if (_dim == _StatsDim.category) return t.category == group.key;
       return t.priority.name == group.key;
     }).toList()
       ..sort((a, b) {
         if (a.isCompleted != b.isCompleted) return a.isCompleted ? 1 : -1;
         return b.createdAt.compareTo(a.createdAt);
       });
-    _openDetailSheet(context, list, '${group.emoji} ${group.label}');
+    _openDetailSheet(context, list, '${group.emoji} ${group.label}',
+        customs: stats.customs);
   }
 
   /// 趋势柱下钻 — 该日完成的待办
@@ -157,7 +159,12 @@ class _TodoStatsScreenState extends State<TodoStatsScreen> {
   }
 
   /// 下钻明细底部弹层 — 复用 TodoItemCard，可勾选/编辑
-  void _openDetailSheet(BuildContext context, List<Todo> todos, String title) {
+  void _openDetailSheet(
+    BuildContext context,
+    List<Todo> todos,
+    String title, {
+    List<TodoCategoryInfo> customs = const [],
+  }) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -166,6 +173,7 @@ class _TodoStatsScreenState extends State<TodoStatsScreen> {
         title: title,
         todos: todos,
         repository: _repo,
+        customCategories: customs,
         onChanged: () {
           if (mounted) _load();
         },
@@ -594,12 +602,14 @@ class _TodoDetailSheet extends StatefulWidget {
   final String title;
   final List<Todo> todos;
   final TodoRepository repository;
+  final List<TodoCategoryInfo> customCategories;
   final VoidCallback onChanged;
 
   const _TodoDetailSheet({
     required this.title,
     required this.todos,
     required this.repository,
+    this.customCategories = const [],
     required this.onChanged,
   });
 
@@ -720,6 +730,7 @@ class _TodoDetailSheetState extends State<_TodoDetailSheet> {
                         todo: t,
                         onToggle: _toggle,
                         onTap: () => _edit(t),
+                        customCategories: widget.customCategories,
                       );
                     },
                   ),

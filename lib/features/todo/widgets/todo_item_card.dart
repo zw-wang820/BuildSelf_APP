@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:buildself/core/constants/colors.dart';
+import 'package:buildself/features/todo/models/todo_category_info.dart';
 import 'package:buildself/features/todo/models/todo_model.dart';
 import 'package:buildself/features/todo/widgets/todo_checkbox.dart';
 import 'package:buildself/shared/widgets/emoji_icon.dart';
@@ -10,11 +11,15 @@ class TodoItemCard extends StatelessWidget {
   final ValueChanged<Todo> onToggle;
   final VoidCallback? onTap; // 点击卡片编辑
 
+  /// 自定义分类列表（分类徽章解析用；缺省时自定义分类回退「工作」样式）
+  final List<TodoCategoryInfo>? customCategories;
+
   const TodoItemCard({
     Key? key,
     required this.todo,
     required this.onToggle,
     this.onTap,
+    this.customCategories,
   }) : super(key: key);
 
   @override
@@ -23,7 +28,8 @@ class TodoItemCard extends StatelessWidget {
     final surface = isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
     final divider = isDark ? AppColors.dividerDark : AppColors.dividerLight;
     final priColor = todo.priority.color;
-    final cat = todo.category;
+    final catInfo =
+        TodoCategoryInfo.resolve(todo.category, customCategories ?? const []);
 
     return GestureDetector(
       onTap: onTap,
@@ -95,7 +101,7 @@ class TodoItemCard extends StatelessWidget {
                           const SizedBox(height: 8),
                           Row(
                             children: [
-                              _CategoryBadge(category: cat),
+                              _CategoryBadge(category: catInfo),
                               if (todo.isRepeat) ...[
                                 const SizedBox(width: 8),
                                 _RepeatBadge(label: todo.repeatLabel!),
@@ -132,7 +138,7 @@ class TodoItemCard extends StatelessWidget {
 
 /// 分类徽章 — 彩色浅底 + emoji + 名称
 class _CategoryBadge extends StatelessWidget {
-  final TodoCategory category;
+  final TodoCategoryInfo category;
   const _CategoryBadge({required this.category});
 
   @override

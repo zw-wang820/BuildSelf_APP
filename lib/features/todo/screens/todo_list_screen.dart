@@ -4,6 +4,7 @@ import 'package:buildself/core/constants/colors.dart';
 import 'package:buildself/core/router/routes.dart';
 import 'package:buildself/features/auth/providers/app_provider.dart';
 import 'package:buildself/features/todo/data/todo_repository.dart';
+import 'package:buildself/features/todo/models/todo_category_info.dart';
 import 'package:buildself/features/todo/models/todo_model.dart';
 import 'package:buildself/features/todo/widgets/add_todo_sheet.dart';
 import 'package:buildself/features/todo/widgets/todo_item_card.dart';
@@ -37,14 +38,15 @@ extension _TodoFilterX on _TodoFilter {
     }
   }
 
-  TodoCategory? get category {
+  /// 内置分类名（work/life/reading），无则 null
+  String? get categoryName {
     switch (this) {
       case _TodoFilter.work:
-        return TodoCategory.work;
+        return TodoCategory.work.name;
       case _TodoFilter.life:
-        return TodoCategory.life;
+        return TodoCategory.life.name;
       case _TodoFilter.reading:
-        return TodoCategory.reading;
+        return TodoCategory.reading.name;
       default:
         return null;
     }
@@ -72,6 +74,11 @@ extension _TodoFilterX on _TodoFilter {
 class _TodoListScreenState extends State<TodoListScreen> {
   final TodoRepository _repo = TodoRepository();
   _TodoFilter _filter = _TodoFilter.all;
+
+  /// 当前筛选的自定义分类名（非 null = 正在筛选该自定义分类）
+  String? _customFilterName;
+
+  List<TodoCategoryInfo> _customCategories = [];
   List<Todo> _todos = [];
   bool _loading = true;
 
@@ -85,26 +92,37 @@ class _TodoListScreenState extends State<TodoListScreen> {
     final userId = context.read<AppProvider>().userId;
     if (userId.isEmpty) return;
     setState(() => _loading = true);
-    // 先惰性补建到期重复实例，再加载列表
+    // 先惰性补建到期重复实例，再加载自定义分类与列表
     await _repo.ensureDueInstances(userId);
+    final customs = await _repo.getCustomCategories(userId);
     final list = await _repo.getAll(
       userId,
-      category: _filter.category,
+      category: _customFilterName ?? _filter.categoryName,
       completed: _filter.completed,
     );
     // 与首页一致：未完成优先 → 未完成按截止日期→优先级；已完成按完成时间倒序
     list.sort(Todo.compareForList);
     if (mounted) setState(() {
+      _customCategories = customs;
       _todos = list;
       _loading = false;
     });
   }
 
   void _changeFilter(_TodoFilter f) {
-    if (_filter == f) {
+    if (_customFilterName == null && _filter == f) {
       return;
     }
-    setState(() => _filter = f);
+    setState(() {
+      _customFilterName = null;
+      _filter = f;
+    });
+    _loadData();
+  }
+
+  void _changeCustomFilter(String name) {
+    if (_customFilterName == name) return;
+    setState(() => _customFilterName = name);
     _loadData();
   }
 
@@ -181,6 +199,14 @@ class _TodoListScreenState extends State<TodoListScreen> {
         title: const Text('待办清单'),
         actions: [
           IconButton(
+            icon: const EmojiIcon('🏷️', size: 21),
+            tooltip: '分类管理',
+            onPressed: () async {
+              await Navigator.pushNamed(context, AppRoutes.todoCategories);
+              if (mounted) _loadData();
+            },
+          ),
+          IconButton(
             icon: const EmojiIcon('📊', size: 21),
             tooltip: '统计',
             onPressed: () =>
@@ -210,43 +236,68 @@ class _TodoListScreenState extends State<TodoListScreen> {
   }
 
   Widget _buildFilterBar() {
+    final total = _TodoFilter.values.length + _customCategories.length;
     return SizedBox(
       height: 48,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        itemCount: _TodoFilter.values.length,
+        itemCount: total,
         separatorBuilder: (context, index) => const SizedBox(width: 8),
         itemBuilder: (context, i) {
-          final f = _TodoFilter.values[i];
-          final selected = _filter == f;
-          return GestureDetector(
-            onTap: () => _changeFilter(f),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 180),
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: selected
-                    ? f.accent.withValues(alpha: 0.16)
-                    : Colors.transparent,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: selected ? f.accent : Theme.of(context).dividerColor,
-                  width: selected ? 1.4 : 1,
-                ),
-              ),
-              child: Text(
-                f.label,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: selected ? f.accent : AppColors.textSecondary(context),
-                ),
-              ),
-            ),
+          // 内置 tab
+          if (i < _TodoFilter.values.length) {
+            final f = _TodoFilter.values[i];
+            final selected = _customFilterName == null && _filter == f;
+            return _buildFilterChip(
+              label: f.label,
+              accent: f.accent,
+              selected: selected,
+              onTap: () => _changeFilter(f),
+            );
+          }
+          // 自定义分类 tab
+          final c = _customCategories[i - _TodoFilter.values.length];
+          final selected = _customFilterName == c.name;
+          return _buildFilterChip(
+            label: '${c.emoji} ${c.label}',
+            accent: c.color,
+            selected: selected,
+            onTap: () => _changeCustomFilter(c.name),
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildFilterChip({
+    required String label,
+    required Color accent,
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: selected ? accent.withValues(alpha: 0.16) : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: selected ? accent : Theme.of(context).dividerColor,
+            width: selected ? 1.4 : 1,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: selected ? accent : AppColors.textSecondary(context),
+          ),
+        ),
       ),
     );
   }
@@ -278,6 +329,7 @@ class _TodoListScreenState extends State<TodoListScreen> {
             todo: todo,
             onToggle: _toggleTodo,
             onTap: () => _openEditSheet(todo),
+            customCategories: _customCategories,
           ),
         );
       },

@@ -185,7 +185,7 @@ class _BookshelfScreenState extends State<BookshelfScreen> {
     );
   }
 
-  /// 顶部阅读统计 — 总书籍/已读完/正在读/想读
+  /// 顶部阅读统计 — 总书籍/已读完/正在读/想读，点击切换对应筛选
   Widget _buildStatsBar() {
     final stats = [
       _StatItem(
@@ -193,24 +193,28 @@ class _BookshelfScreenState extends State<BookshelfScreen> {
         count: _totalCount,
         icon: Icons.collections_bookmark_outlined,
         color: AppColors.reading,
+        filter: _BookFilter.all,
       ),
       _StatItem(
         label: '已读完',
         count: _finishedCount,
         icon: Icons.check_circle_outline,
         color: AppColors.success,
+        filter: _BookFilter.finished,
       ),
       _StatItem(
         label: '正在读',
         count: _readingCount,
         icon: Icons.auto_stories_outlined,
         color: AppColors.todo,
+        filter: _BookFilter.reading,
       ),
       _StatItem(
         label: '想读',
         count: _plannedCount,
         icon: Icons.bookmark_border,
         color: AppColors.warning,
+        filter: _BookFilter.planned,
       ),
     ];
 
@@ -218,36 +222,45 @@ class _BookshelfScreenState extends State<BookshelfScreen> {
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
       child: Row(
         children: stats.map((s) {
+          final selected = _filter == s.filter;
           return Expanded(
-            child: Container(
-              margin: EdgeInsets.only(right: s == stats.last ? 0 : 8),
-              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
-              decoration: BoxDecoration(
-                color: s.color.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Column(
-                children: [
-                  Icon(s.icon, size: 18, color: s.color),
-                  const SizedBox(height: 6),
-                  Text(
-                    '${s.count}',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w800,
-                      color: s.color,
-                      height: 1,
-                    ),
+            child: GestureDetector(
+              onTap: () => _changeFilter(s.filter),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                margin: EdgeInsets.only(right: s == stats.last ? 0 : 8),
+                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
+                decoration: BoxDecoration(
+                  color: s.color.withValues(alpha: selected ? 0.2 : 0.1),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: selected ? s.color : Colors.transparent,
+                    width: 1.2,
                   ),
-                  const SizedBox(height: 3),
-                  Text(
-                    s.label,
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: AppColors.textSecondary(context),
+                ),
+                child: Column(
+                  children: [
+                    Icon(s.icon, size: 18, color: s.color),
+                    const SizedBox(height: 6),
+                    Text(
+                      '${s.count}',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
+                        color: s.color,
+                        height: 1,
+                      ),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 3),
+                    Text(
+                      s.label,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: AppColors.textSecondary(context),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           );
@@ -664,11 +677,13 @@ class _StatItem {
   final int count;
   final IconData icon;
   final Color color;
+  final _BookFilter filter;
 
   _StatItem({
     required this.label,
     required this.count,
     required this.icon,
     required this.color,
+    required this.filter,
   });
 }

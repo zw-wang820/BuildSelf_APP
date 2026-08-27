@@ -27,6 +27,7 @@ import 'package:buildself/features/todo/screens/todo_list_screen.dart';
 import 'package:buildself/features/todo/screens/todo_stats_screen.dart';
 import 'package:buildself/features/todo/screens/category_manage_screen.dart';
 import 'package:buildself/features/habit/screens/habit_list_screen.dart';
+import 'package:buildself/features/habit/screens/habit_stats_screen.dart';
 import 'package:buildself/features/profile/screens/profile_center_screen.dart';
 import 'package:buildself/features/profile/screens/profile_screen.dart';
 import 'package:buildself/features/profile/screens/statistics_screen.dart';
@@ -121,6 +122,9 @@ class AppRouter {
       // 习惯打卡模块
       case AppRoutes.habitList:
         return _buildRoute(const HabitListScreen(), settings);
+      case AppRoutes.habitStats:
+        final habitId = settings.arguments as String? ?? '';
+        return _buildRoute(HabitStatsScreen(habitId: habitId), settings);
 
       // 个人中心
       case AppRoutes.profileCenter:

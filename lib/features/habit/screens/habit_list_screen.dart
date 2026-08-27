@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:buildself/core/constants/colors.dart';
+import 'package:buildself/core/router/routes.dart';
 import 'package:buildself/features/auth/providers/app_provider.dart';
 import 'package:buildself/features/habit/data/habit_repository.dart';
 import 'package:buildself/features/habit/models/habit_model.dart';
@@ -184,7 +185,15 @@ class _HabitListScreenState extends State<HabitListScreen> {
       streak: HabitRepository.streakOf(dates),
       onToggleToday: (check) => _toggleToday(habit, check),
       onMakeupYesterday: () => _makeupYesterday(habit),
+      onStats: () => _openStats(habit),
     );
+  }
+
+  /// 打开该习惯的打卡日历页，返回后刷新列表
+  Future<void> _openStats(Habit habit) async {
+    await Navigator.pushNamed(context, AppRoutes.habitStats,
+        arguments: habit.id);
+    if (mounted) _loadData();
   }
 
   Widget _buildEmpty() {

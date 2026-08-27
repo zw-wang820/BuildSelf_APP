@@ -20,6 +20,7 @@ class AppRoutes {
 
   // 习惯打卡模块
   static const String habitList = '/habit';
+  static const String habitStats = '/habit/stats';
 
   // 工作模块
   static const String workList = '/work';

@@ -4,7 +4,7 @@ import 'package:buildself/features/habit/models/habit_model.dart';
 import 'package:buildself/features/todo/widgets/todo_checkbox.dart';
 import 'package:buildself/shared/widgets/app_card.dart';
 
-/// 习惯卡片 — 图标 + 名称 + 连续天数 + 今日打卡圈 + 补昨天
+/// 习惯卡片 — 图标 + 名称 + 连续天数 + 统计入口 + 今日打卡圈 + 补昨天
 class HabitItemCard extends StatelessWidget {
   final Habit habit;
   final bool checkedToday;
@@ -12,6 +12,7 @@ class HabitItemCard extends StatelessWidget {
   final int streak;
   final ValueChanged<bool> onToggleToday;
   final VoidCallback? onMakeupYesterday;
+  final VoidCallback? onStats;
 
   const HabitItemCard({
     Key? key,
@@ -21,6 +22,7 @@ class HabitItemCard extends StatelessWidget {
     required this.streak,
     required this.onToggleToday,
     this.onMakeupYesterday,
+    this.onStats,
   }) : super(key: key);
 
   Color get _color =>
@@ -83,6 +85,25 @@ class HabitItemCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
+              // 统计入口
+              if (onStats != null) ...[
+                GestureDetector(
+                  onTap: onStats,
+                  behavior: HitTestBehavior.opaque,
+                  child: Container(
+                    width: 34,
+                    height: 34,
+                    decoration: BoxDecoration(
+                      color: _color.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Center(
+                      child: Text('📊', style: TextStyle(fontSize: 15)),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+              ],
               // 今日打卡圈（复用待办弹簧复选框）
               TodoCheckbox(
                 value: checkedToday,

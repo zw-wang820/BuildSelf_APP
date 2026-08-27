@@ -42,6 +42,26 @@ class HabitRepository {
     return maps.map(Habit.fromMap).toList();
   }
 
+  /// 单个习惯（日历统计页用）
+  Future<Habit?> getById(String habitId) async {
+    final map = await _db.queryOne(
+      AppTables.habits,
+      where: 'id = ?',
+      whereArgs: [habitId],
+    );
+    return map != null ? Habit.fromMap(map) : null;
+  }
+
+  /// 单个习惯的全部打卡日期集合
+  Future<Set<String>> getLogsByHabitId(String habitId) async {
+    final maps = await _db.queryAll(
+      AppTables.habitLogs,
+      where: 'habit_id = ?',
+      whereArgs: [habitId],
+    );
+    return maps.map((m) => m['date'] as String).toSet();
+  }
+
   /// 习惯全部打卡日期集合 — habitId -> Set<yyyy-MM-dd>
   Future<Map<String, Set<String>>> getLogsByHabit(String userId) async {
     final habits = await getAll(userId);

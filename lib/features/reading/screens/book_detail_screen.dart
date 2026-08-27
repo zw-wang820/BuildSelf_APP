@@ -67,6 +67,302 @@ class _BookDetailScreenState extends State<BookDetailScreen>
     if (mounted) _loadBook();
   }
 
+  /// 阅读统计 — 取该书全部笔记，分组计数后弹出统计面板
+  Future<void> _openStats() async {
+    final bookId = widget.bookId;
+    if (bookId == null) return;
+    List<ReadingNote> notes;
+    try {
+      notes = await _repo.getNotesByBook(bookId);
+    } catch (_) {
+      notes = [];
+    }
+    if (!mounted) return;
+
+    final total = notes.length;
+    final counts = <NoteType, int>{for (final t in NoteType.values) t: 0};
+    for (final n in notes) {
+      counts[n.noteType] = counts[n.noteType]! + 1;
+    }
+    final weekAgo = DateTime.now().subtract(const Duration(days: 7));
+    final weekCount = notes.where((n) => n.createdAt.isAfter(weekAgo)).length;
+
+    // 返回选中的 Tab 下标（null = 仅关闭不跳转）
+    final selectedIndex = await showModalBottomSheet<int>(
+      context: context,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetContext) => _buildStatsSheet(
+        sheetContext,
+        _book?.title ?? '本书',
+        total,
+        counts,
+        weekCount,
+      ),
+    );
+    if (selectedIndex != null && mounted) {
+      _tabController.animateTo(selectedIndex);
+    }
+  }
+
+  /// 统计面板内容
+  Widget _buildStatsSheet(
+    BuildContext context,
+    String bookTitle,
+    int total,
+    Map<NoteType, int> counts,
+    int weekCount,
+  ) {
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 拖拽条
+            Center(
+              child: Container(
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.dividerDark,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 14),
+            // 标题行
+            Row(
+              children: [
+                const Text('📊 阅读统计',
+                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
+                const Spacer(),
+                Flexible(
+                  child: Text(
+                    bookTitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textSecondary(context),
+                    ),
+                  ),
+                ),
+                IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.close, size: 18),
+                  visualDensity: VisualDensity.compact,
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              '笔记总数 $total 条',
+              style: TextStyle(
+                fontSize: 12,
+                color: AppColors.textSecondary(context),
+              ),
+            ),
+            const SizedBox(height: 14),
+            if (total == 0)
+              _buildStatsEmpty(context)
+            else ...[
+              for (final t in NoteType.values) ...[
+                _buildStatRow(context, t, counts[t]!, total),
+                const SizedBox(height: 8),
+              ],
+            ],
+            // 近 7 天新增
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: AppColors.accent.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Row(
+                children: [
+                  const Text('🆕', style: TextStyle(fontSize: 14)),
+                  const SizedBox(width: 8),
+                  Text(
+                    '近 7 天新增',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textPrimary(context),
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    '$weekCount 条',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.accent,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 单类统计行 — 点击收起面板并跳到对应笔记 Tab
+  Widget _buildStatRow(
+    BuildContext context,
+    NoteType type,
+    int count,
+    int total,
+  ) {
+    final color = _noteTypeColor(type);
+    final ratio = total == 0 ? 0.0 : count / total;
+    final percent = (ratio * 100).round();
+    return GestureDetector(
+      onTap: () => Navigator.pop(context, _tabFilters.indexOf(type)),
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            Text(_noteTypeEmoji(type), style: const TextStyle(fontSize: 20)),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        type.label,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textPrimary(context),
+                        ),
+                      ),
+                      const Spacer(),
+                      Text(
+                        '$count 条',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: color,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(3),
+                    child: LinearProgressIndicator(
+                      value: ratio,
+                      minHeight: 5,
+                      backgroundColor: color.withValues(alpha: 0.15),
+                      valueColor: AlwaysStoppedAnimation<Color>(color),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 10),
+            Text(
+              '$percent%',
+              style: TextStyle(
+                fontSize: 11,
+                color: AppColors.textSecondary(context),
+              ),
+            ),
+            const SizedBox(width: 2),
+            Icon(Icons.chevron_right,
+                size: 16, color: AppColors.textSecondary(context)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 无笔记空状态 — 点击收起并切到全部 Tab
+  Widget _buildStatsEmpty(BuildContext context) {
+    return GestureDetector(
+      onTap: () => Navigator.pop(context, 0),
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+        decoration: BoxDecoration(
+          color: AppColors.reading.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            const Text('📝', style: TextStyle(fontSize: 20)),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '这本书还没有笔记',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary(context),
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '点击去添加第一条笔记',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: AppColors.textSecondary(context),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right,
+                size: 16, color: AppColors.textSecondary(context)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Color _noteTypeColor(NoteType type) {
+    switch (type) {
+      case NoteType.excerpt:
+        return AppColors.reading;
+      case NoteType.insight:
+        return AppColors.info;
+      case NoteType.thought:
+        return AppColors.warning;
+      case NoteType.change:
+        return AppColors.success;
+    }
+  }
+
+  String _noteTypeEmoji(NoteType type) {
+    switch (type) {
+      case NoteType.excerpt:
+        return '📝';
+      case NoteType.insight:
+        return '💡';
+      case NoteType.thought:
+        return '🤔';
+      case NoteType.change:
+        return '🔄';
+    }
+  }
+
   Future<void> _loadBook() async {
     if (widget.bookId == null) {
       setState(() => _loading = false);
@@ -230,6 +526,13 @@ class _BookDetailScreenState extends State<BookDetailScreen>
                 ),
               ],
             ),
+          ),
+          // 阅读统计入口
+          IconButton(
+            onPressed: _openStats,
+            icon: const EmojiIcon('📊', size: 18),
+            color: AppColors.reading,
+            tooltip: '阅读统计',
           ),
         ],
       ),

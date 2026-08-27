@@ -19,6 +19,8 @@ import 'package:buildself/features/reading/screens/bookshelf_screen.dart';
 import 'package:buildself/features/reading/screens/book_detail_screen.dart';
 import 'package:buildself/features/reading/screens/book_add_screen.dart';
 import 'package:buildself/features/reading/screens/note_edit_screen.dart';
+import 'package:buildself/features/reading/guide/reading_guide_screen.dart';
+import 'package:buildself/features/reading/guide/reading_guide_detail_screen.dart';
 import 'package:buildself/features/murmur/screens/murmur_screen.dart';
 import 'package:buildself/features/search/screens/search_screen.dart';
 import 'package:buildself/features/todo/screens/todo_list_screen.dart';
@@ -94,6 +96,11 @@ class AppRouter {
       case AppRoutes.noteEdit:
         final args = settings.arguments as NoteEditArgs?;
         return _buildRoute(NoteEditScreen(args: args), settings);
+      case AppRoutes.readingGuide:
+        return _buildRoute(const ReadingGuideScreen(), settings);
+      case AppRoutes.readingGuideDetail:
+        final index = settings.arguments as int? ?? 0;
+        return _buildRoute(ReadingGuideDetailScreen(index: index), settings);
 
       // 碎碎念模块
       case AppRoutes.murmur:

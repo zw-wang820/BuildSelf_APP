@@ -42,6 +42,8 @@ class AppRoutes {
   static const String bookDetail = '/reading/book';
   static const String bookAdd = '/reading/book/add';
   static const String noteEdit = '/reading/note/edit';
+  static const String readingGuide = '/reading/guide';
+  static const String readingGuideDetail = '/reading/guide/detail';
 
   // 碎碎念模块
   static const String murmur = '/murmur';

@@ -10,7 +10,10 @@ class NoteEditArgs {
   final String bookId;
   final ReadingNote? note;
 
-  NoteEditArgs({required this.bookId, this.note});
+  /// 新建时预设的笔记类型（不传默认摘抄）
+  final NoteType? initialType;
+
+  NoteEditArgs({required this.bookId, this.note, this.initialType});
 }
 
 /// 读书笔记编辑/新建页
@@ -34,7 +37,8 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
   void initState() {
     super.initState();
     final note = widget.args?.note;
-    _noteType = note?.noteType ?? NoteType.excerpt;
+    _noteType =
+        note?.noteType ?? widget.args?.initialType ?? NoteType.excerpt;
     if (note != null) {
       _chapterController.text = note.chapter ?? '';
       _contentController.text = note.content;

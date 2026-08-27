@@ -155,6 +155,10 @@ class _BookshelfScreenState extends State<BookshelfScreen> {
         title: const Text('书架'),
         actions: [
           IconButton(
+            icon: const EmojiIcon('❓', size: 21),
+            onPressed: () => Navigator.pushNamed(context, AppRoutes.readingGuide),
+          ),
+          IconButton(
             icon: const EmojiIcon('🔍', size: 21),
             onPressed: () => Navigator.pushNamed(context, AppRoutes.search,
                 arguments: 'reading'),

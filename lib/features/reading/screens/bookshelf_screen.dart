@@ -6,6 +6,7 @@ import 'package:buildself/data/models/enums.dart';
 import 'package:buildself/data/models/reading_models.dart';
 import 'package:buildself/data/repositories/reading_repository.dart';
 import 'package:buildself/features/auth/providers/app_provider.dart';
+import 'package:buildself/features/reading/reading_cover.dart';
 import 'package:buildself/features/reading/widgets/add_book_sheet.dart';
 import 'package:buildself/shared/layouts/main_scaffold.dart';
 import 'package:buildself/shared/widgets/emoji_icon.dart';
@@ -358,8 +359,35 @@ class _BookshelfScreenState extends State<BookshelfScreen> {
               ),
               child: Stack(
                 children: [
-                  const Center(
-                    child: EmojiIcon('📚', size: 30),
+                  // 封面内容 — emoji + 书名文字
+                  Center(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 6),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            resolveCoverEmoji(book),
+                            style: const TextStyle(fontSize: 26),
+                          ),
+                          if (book.title.isNotEmpty) ...[
+                            const SizedBox(height: 6),
+                            Text(
+                              book.title,
+                              maxLines: 3,
+                              overflow: TextOverflow.ellipsis,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                                height: 1.3,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
                   ),
                   Positioned(
                     top: 6,
@@ -521,8 +549,32 @@ class _BookshelfScreenState extends State<BookshelfScreen> {
                 gradient: gradient,
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Center(
-                child: const EmojiIcon('📚', size: 22),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    resolveCoverEmoji(book),
+                    style: const TextStyle(fontSize: 20),
+                  ),
+                  if (book.title.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: Text(
+                        book.title,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                          height: 1.2,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ),
             const SizedBox(height: 5),

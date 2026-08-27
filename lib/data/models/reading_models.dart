@@ -57,6 +57,9 @@ class Book {
   /// 封面渐变色下标（AppColors.bookCovers），null 时按列表序号轮询
   int? coverColor;
 
+  /// 封面 emoji（null = 按书名自动分配），非 null 时用户手动指定
+  String? coverEmoji;
+
   /// 最近阅读时间，用于「最近阅读」排序
   DateTime? lastReadAt;
   final DateTime createdAt;
@@ -75,6 +78,7 @@ class Book {
     this.currentPage = 0,
     this.totalPages = 0,
     this.coverColor,
+    this.coverEmoji,
     this.lastReadAt,
     required this.createdAt,
   });
@@ -100,6 +104,7 @@ class Book {
         'current_page': currentPage,
         'total_pages': totalPages,
         'cover_color': coverColor,
+        'cover_emoji': coverEmoji,
         'last_read_at': lastReadAt?.toIso8601String(),
         'created_at': createdAt.toIso8601String(),
       };
@@ -123,6 +128,7 @@ class Book {
         currentPage: (map['current_page'] as int?) ?? 0,
         totalPages: (map['total_pages'] as int?) ?? 0,
         coverColor: map['cover_color'] as int?,
+        coverEmoji: map['cover_emoji'] as String?,
         lastReadAt: map['last_read_at'] != null
             ? DateTime.tryParse(map['last_read_at'] as String)
             : null,

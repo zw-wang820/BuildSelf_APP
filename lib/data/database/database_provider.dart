@@ -124,6 +124,12 @@ class DatabaseProvider {
         'CREATE INDEX IF NOT EXISTS idx_todo_categories_user ON ${AppTables.todoCategories}(user_id)',
       );
     }
+    // v8: 书籍新增封面 emoji 字段（null = 按书名自动分配）
+    if (oldVersion < 8) {
+      await db.execute(
+        'ALTER TABLE ${AppTables.books} ADD COLUMN cover_emoji TEXT',
+      );
+    }
   }
 
   // ==================== 通用 CRUD 方法 ====================

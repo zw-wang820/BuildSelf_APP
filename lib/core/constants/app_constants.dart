@@ -9,7 +9,7 @@ class AppConstants {
 
   // 数据库
   static const String databaseName = 'buildself.db';
-  static const int databaseVersion = 7;
+  static const int databaseVersion = 8;
 
   // 本地存储 Key
   static const String keyUserId = 'user_id';

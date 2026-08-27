@@ -107,6 +107,9 @@ class AppStrings {
   static String get readingTitle => _t('readingTitle');
   static String get bookshelf => _t('bookshelf');
   static String get addBook => _t('addBook');
+  static String get editBook => _t('editBook');
+  static String get coverIcon => _t('coverIcon');
+  static String get coverIconAutoHint => _t('coverIconAutoHint');
   static String get noteExcerpt => _t('noteExcerpt');
   static String get noteInsight => _t('noteInsight');
   static String get noteThought => _t('noteThought');
@@ -239,6 +242,9 @@ class AppStrings {
       'readingTitle': '阅读',
       'bookshelf': '书架',
       'addBook': '添加书籍',
+      'editBook': '编辑书籍',
+      'coverIcon': '封面图标',
+      'coverIconAutoHint': '不选择则按书名自动匹配',
       'noteExcerpt': '摘抄',
       'noteInsight': '心得',
       'noteThought': '思考',
@@ -362,6 +368,9 @@ class AppStrings {
       'readingTitle': '閱讀',
       'bookshelf': '書架',
       'addBook': '添加書籍',
+      'editBook': '編輯書籍',
+      'coverIcon': '封面圖標',
+      'coverIconAutoHint': '不選擇則按書名自動匹配',
       'noteExcerpt': '摘抄',
       'noteInsight': '心得',
       'noteThought': '思考',
@@ -485,6 +494,9 @@ class AppStrings {
       'readingTitle': 'Reading',
       'bookshelf': 'Bookshelf',
       'addBook': 'Add Book',
+      'editBook': 'Edit Book',
+      'coverIcon': 'Cover Icon',
+      'coverIconAutoHint': 'Auto-matched by title if not selected',
       'noteExcerpt': 'Excerpt',
       'noteInsight': 'Insight',
       'noteThought': 'Thought',

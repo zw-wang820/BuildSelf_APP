@@ -20,6 +20,7 @@ class ReadingRepository {
     int currentPage = 0,
     int totalPages = 0,
     int? coverColor,
+    String? coverEmoji,
   }) async {
     final now = DateTime.now();
     final book = Book(
@@ -35,6 +36,7 @@ class ReadingRepository {
           status == BookStatus.finished && totalPages > 0 ? totalPages : currentPage,
       totalPages: totalPages,
       coverColor: coverColor,
+      coverEmoji: coverEmoji,
       lastReadAt: status == BookStatus.reading || status == BookStatus.finished
           ? now
           : null,

@@ -8,6 +8,7 @@ import 'package:buildself/features/work/screens/work_list_screen.dart';
 import 'package:buildself/features/work/screens/work_detail_screen.dart';
 import 'package:buildself/features/work/screens/work_edit_screen.dart';
 import 'package:buildself/data/models/work_note_model.dart';
+import 'package:buildself/data/models/reading_models.dart';
 import 'package:buildself/features/life/screens/life_list_screen.dart';
 import 'package:buildself/features/life/screens/life_edit_screen.dart';
 import 'package:buildself/features/goal/screens/goal_board_screen.dart';
@@ -88,7 +89,8 @@ class AppRouter {
         final id = settings.arguments as String?;
         return _buildRoute(BookDetailScreen(bookId: id), settings);
       case AppRoutes.bookAdd:
-        return _buildRoute(const BookAddScreen(), settings);
+        final book = settings.arguments as Book?;
+        return _buildRoute(BookAddScreen(book: book), settings);
       case AppRoutes.noteEdit:
         final args = settings.arguments as NoteEditArgs?;
         return _buildRoute(NoteEditScreen(args: args), settings);

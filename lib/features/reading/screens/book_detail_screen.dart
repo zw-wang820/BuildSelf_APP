@@ -5,6 +5,7 @@ import 'package:buildself/core/router/routes.dart';
 import 'package:buildself/data/models/enums.dart';
 import 'package:buildself/data/models/reading_models.dart';
 import 'package:buildself/data/repositories/reading_repository.dart';
+import 'package:buildself/features/reading/reading_cover.dart';
 import 'package:buildself/features/reading/screens/note_edit_screen.dart';
 import 'package:buildself/shared/widgets/emoji_icon.dart';
 import 'package:buildself/shared/widgets/empty_state.dart';
@@ -60,6 +61,12 @@ class _BookDetailScreenState extends State<BookDetailScreen>
     }
   }
 
+  /// 打开书籍编辑页，返回后刷新书籍信息
+  Future<void> _openEditBook() async {
+    await Navigator.pushNamed(context, AppRoutes.bookAdd, arguments: _book);
+    if (mounted) _loadBook();
+  }
+
   Future<void> _loadBook() async {
     if (widget.bookId == null) {
       setState(() => _loading = false);
@@ -86,11 +93,14 @@ class _BookDetailScreenState extends State<BookDetailScreen>
         actions: [
           PopupMenuButton<String>(
             onSelected: (value) {
-              if (value == 'delete') {
+              if (value == 'edit') {
+                _openEditBook();
+              } else if (value == 'delete') {
                 _showDeleteDialog(context);
               }
             },
             itemBuilder: (context) => [
+              PopupMenuItem(value: 'edit', child: Text(AppStrings.edit)),
               PopupMenuItem(value: 'delete', child: Text(AppStrings.delete)),
             ],
           ),
@@ -154,15 +164,42 @@ class _BookDetailScreenState extends State<BookDetailScreen>
       padding: const EdgeInsets.all(16),
       child: Row(
         children: [
-          // 封面占位
+          // 封面 — 渐变 + emoji + 书名
           Container(
             width: 64,
             height: 88,
             decoration: BoxDecoration(
-              color: AppColors.reading.withOpacity(0.2),
+              gradient: AppColors.bookCovers[
+                  (book?.coverColor ?? 0) % AppColors.bookCovers.length],
               borderRadius: BorderRadius.circular(6),
             ),
-            child: const Center(child: EmojiIcon('📚', size: 28)),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  book != null ? resolveCoverEmoji(book) : '📚',
+                  style: const TextStyle(fontSize: 20),
+                ),
+                if (book != null && book.title.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: Text(
+                      book.title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                        height: 1.2,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
           ),
           const SizedBox(width: 16),
           Expanded(

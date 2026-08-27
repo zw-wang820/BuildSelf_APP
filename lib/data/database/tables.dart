@@ -123,6 +123,7 @@ class AppSql {
       current_page INTEGER NOT NULL DEFAULT 0,
       total_pages INTEGER NOT NULL DEFAULT 0,
       cover_color INTEGER,
+      cover_emoji TEXT,
       last_read_at TEXT,
       created_at TEXT NOT NULL,
       FOREIGN KEY (user_id) REFERENCES ${AppTables.users}(user_id)

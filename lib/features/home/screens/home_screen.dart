@@ -17,6 +17,7 @@ import 'package:buildself/features/todo/models/todo_model.dart';
 import 'package:buildself/features/todo/widgets/add_todo_sheet.dart';
 import 'package:buildself/features/todo/widgets/todo_checkbox.dart';
 import 'package:buildself/features/habit/data/habit_repository.dart';
+import 'package:buildself/features/reading/reading_cover.dart';
 import 'package:buildself/shared/widgets/toast.dart';
 
 /// 首页 — 成长日报
@@ -790,8 +791,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildBookRow(Book book, int index) {
-    final gradient =
-        AppColors.bookCovers[index % AppColors.bookCovers.length];
+    final gradient = AppColors
+        .bookCovers[(book.coverColor ?? index) % AppColors.bookCovers.length];
     return Row(
       children: [
         Container(
@@ -801,7 +802,10 @@ class _HomeScreenState extends State<HomeScreen> {
             gradient: gradient,
             borderRadius: BorderRadius.circular(6),
           ),
-          child: const Center(child: EmojiIcon('📚', size: 18)),
+          child: Center(
+            child: Text(resolveCoverEmoji(book),
+                style: const TextStyle(fontSize: 16)),
+          ),
         ),
         const SizedBox(width: 12),
         Expanded(

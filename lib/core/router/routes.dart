@@ -27,6 +27,7 @@ class AppRoutes {
   static const String workList = '/work';
   static const String workDetail = '/work/detail';
   static const String workEdit = '/work/edit';
+  static const String workStats = '/work/stats';
 
   // 生活模块
   static const String lifeList = '/life';

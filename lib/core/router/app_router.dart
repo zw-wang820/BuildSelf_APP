@@ -7,6 +7,7 @@ import 'package:buildself/features/auth/screens/login_screen.dart';
 import 'package:buildself/features/work/screens/work_list_screen.dart';
 import 'package:buildself/features/work/screens/work_detail_screen.dart';
 import 'package:buildself/features/work/screens/work_edit_screen.dart';
+import 'package:buildself/features/work/screens/work_stats_screen.dart';
 import 'package:buildself/data/models/work_note_model.dart';
 import 'package:buildself/data/models/goal_model.dart';
 import 'package:buildself/data/models/reading_models.dart';
@@ -70,6 +71,8 @@ class AppRouter {
       case AppRoutes.workEdit:
         final note = settings.arguments as WorkNote?;
         return _buildRoute(WorkEditScreen(note: note), settings);
+      case AppRoutes.workStats:
+        return _buildRoute(const WorkStatsScreen(), settings);
 
       // 生活模块
       case AppRoutes.lifeList:

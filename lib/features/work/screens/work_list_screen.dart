@@ -57,6 +57,13 @@ class _WorkListScreenState extends State<WorkListScreen> {
       appBar: AppBar(
         title: Text(AppStrings.workTitle),
         actions: [
+          // 工作统计入口
+          IconButton(
+            icon: const EmojiIcon('📊', size: 21),
+            tooltip: '工作统计',
+            onPressed: () =>
+                Navigator.pushNamed(context, AppRoutes.workStats),
+          ),
           IconButton(
             icon: const EmojiIcon('🔍', size: 21),
             onPressed: () => _showSearch(context),

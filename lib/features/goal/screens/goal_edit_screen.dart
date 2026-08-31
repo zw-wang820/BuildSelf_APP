@@ -8,9 +8,11 @@ import 'package:buildself/data/repositories/goal_repository.dart';
 import 'package:buildself/features/auth/providers/app_provider.dart';
 import 'package:buildself/shared/widgets/emoji_icon.dart';
 
-/// 目标编辑/新建页
+/// 目标编辑/新建页 — goal 非空时为编辑模式
 class GoalEditScreen extends StatefulWidget {
-  const GoalEditScreen({Key? key}) : super(key: key);
+  final Goal? goal;
+
+  const GoalEditScreen({Key? key, this.goal}) : super(key: key);
 
   @override
   State<GoalEditScreen> createState() => _GoalEditScreenState();
@@ -28,6 +30,24 @@ class _GoalEditScreenState extends State<GoalEditScreen> {
   RewardType _rewardType = RewardType.food;
   DateTime? _targetDate;
   bool _saving = false;
+
+  bool get _isEdit => widget.goal != null;
+
+  @override
+  void initState() {
+    super.initState();
+    final goal = widget.goal;
+    if (goal != null) {
+      _titleController.text = goal.title;
+      _descController.text = goal.description;
+      _goalType = goal.goalType;
+      _category = goal.category ?? GoalCategory.other;
+      _progressType = goal.progressType;
+      _rewardType = goal.reward.type;
+      _rewardDescController.text = goal.reward.description;
+      _targetDate = goal.targetDate;
+    }
+  }
 
   @override
   void dispose() {
@@ -50,22 +70,38 @@ class _GoalEditScreenState extends State<GoalEditScreen> {
     setState(() => _saving = true);
 
     try {
-      final userId = context.read<AppProvider>().userId;
+      final title = _titleController.text.trim();
+      final description = _descController.text.trim();
       final reward = Reward(
         type: _rewardType,
         description: _rewardDescController.text.trim(),
       );
+      final goal = widget.goal;
 
-      await _goalRepo.create(
-        userId: userId,
-        title: _titleController.text.trim(),
-        description: _descController.text.trim(),
-        goalType: _goalType,
-        category: _category,
-        targetDate: _targetDate,
-        progressType: _progressType,
-        reward: reward,
-      );
+      if (goal != null) {
+        // 编辑模式：原地修改后更新
+        goal.title = title;
+        goal.description = description;
+        goal.goalType = _goalType;
+        goal.category = _category;
+        goal.progressType = _progressType;
+        goal.reward = reward;
+        goal.targetDate = _targetDate;
+        await _goalRepo.update(goal);
+      } else {
+        // 新建模式
+        final userId = context.read<AppProvider>().userId;
+        await _goalRepo.create(
+          userId: userId,
+          title: title,
+          description: description,
+          goalType: _goalType,
+          category: _category,
+          targetDate: _targetDate,
+          progressType: _progressType,
+          reward: reward,
+        );
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -103,7 +139,7 @@ class _GoalEditScreenState extends State<GoalEditScreen> {
           onPressed: _saving ? null : () => Navigator.pop(context),
           child: Text(AppStrings.cancel),
         ),
-        title: Text(AppStrings.newGoal),
+        title: Text(_isEdit ? AppStrings.editGoal : AppStrings.newGoal),
         actions: [
           TextButton(
             onPressed: _saving ? null : _save,

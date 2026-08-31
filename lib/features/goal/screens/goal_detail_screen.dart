@@ -180,7 +180,8 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
             IconButton(
               icon: const EmojiIcon('✏️', size: 20),
               onPressed: () async {
-                await Navigator.pushNamed(context, AppRoutes.goalEdit);
+                await Navigator.pushNamed(context, AppRoutes.goalEdit,
+                    arguments: _goal);
                 _loadData();
               },
             ),

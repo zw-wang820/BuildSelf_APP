@@ -98,6 +98,7 @@ class AppStrings {
   static String get midTermGoal => _t('midTermGoal');
   static String get longTermGoal => _t('longTermGoal');
   static String get newGoal => _t('newGoal');
+  static String get editGoal => _t('editGoal');
   static String get achievementWall => _t('achievementWall');
   static String get updateProgress => _t('updateProgress');
   static String get rewardLabel => _t('rewardLabel');
@@ -235,6 +236,7 @@ class AppStrings {
       'midTermGoal': '中期目标',
       'longTermGoal': '长期目标',
       'newGoal': '新建目标',
+      'editGoal': '编辑目标',
       'achievementWall': '成就墙',
       'updateProgress': '更新进度',
       'rewardLabel': '奖励',
@@ -361,6 +363,7 @@ class AppStrings {
       'midTermGoal': '中期目標',
       'longTermGoal': '長期目標',
       'newGoal': '新建目標',
+      'editGoal': '編輯目標',
       'achievementWall': '成就牆',
       'updateProgress': '更新進度',
       'rewardLabel': '獎勵',
@@ -487,6 +490,7 @@ class AppStrings {
       'midTermGoal': 'Mid-term Goals',
       'longTermGoal': 'Long-term Goals',
       'newGoal': 'New Goal',
+      'editGoal': 'Edit Goal',
       'achievementWall': 'Achievement Wall',
       'updateProgress': 'Update Progress',
       'rewardLabel': 'Reward',

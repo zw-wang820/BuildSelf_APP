@@ -8,6 +8,7 @@ import 'package:buildself/features/work/screens/work_list_screen.dart';
 import 'package:buildself/features/work/screens/work_detail_screen.dart';
 import 'package:buildself/features/work/screens/work_edit_screen.dart';
 import 'package:buildself/data/models/work_note_model.dart';
+import 'package:buildself/data/models/goal_model.dart';
 import 'package:buildself/data/models/reading_models.dart';
 import 'package:buildself/features/life/screens/life_list_screen.dart';
 import 'package:buildself/features/life/screens/life_edit_screen.dart';
@@ -82,7 +83,8 @@ class AppRouter {
         final id = settings.arguments as String?;
         return _buildRoute(GoalDetailScreen(goalId: id), settings);
       case AppRoutes.goalEdit:
-        return _buildRoute(const GoalEditScreen(), settings);
+        final goal = settings.arguments as Goal?;
+        return _buildRoute(GoalEditScreen(goal: goal), settings);
       case AppRoutes.achievementWall:
         return _buildRoute(const AchievementWallScreen(), settings);
 

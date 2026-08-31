@@ -130,6 +130,23 @@ class DatabaseProvider {
         'ALTER TABLE ${AppTables.books} ADD COLUMN cover_emoji TEXT',
       );
     }
+    // v9: 工作记录新增待学项完成状态；旧类型归并为新 4 类
+    if (oldVersion < 9) {
+      await db.execute(
+        'ALTER TABLE ${AppTables.workNotes} ADD COLUMN done INTEGER NOT NULL DEFAULT 0',
+      );
+      await db.execute(
+        'ALTER TABLE ${AppTables.workNotes} ADD COLUMN done_at TEXT',
+      );
+      await db.execute(
+        "UPDATE ${AppTables.workNotes} SET record_type = '心得' "
+        "WHERE record_type IN ('经验','experience','insight')",
+      );
+      await db.execute(
+        "UPDATE ${AppTables.workNotes} SET record_type = '思考' "
+        "WHERE record_type IN ('反思','reflection')",
+      );
+    }
   }
 
   // ==================== 通用 CRUD 方法 ====================

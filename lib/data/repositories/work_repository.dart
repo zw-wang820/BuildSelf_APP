@@ -11,8 +11,8 @@ class WorkRepository {
   final DatabaseProvider _db = DatabaseProvider.instance;
   final _uuid = const Uuid();
 
-  /// 内置分类
-  static const List<String> builtinCategories = ['经验', '心得', '反思'];
+  /// 内置分类（类型）
+  static const List<String> builtinCategories = ['心得', '思考', '工作日志', '待学习项'];
 
   /// 获取用户的所有分类（内置 + 自定义）
   Future<List<String>> getCategories(String userId) async {
@@ -47,6 +47,7 @@ class WorkRepository {
     required String recordType,
     List<String> tags = const [],
     Mood? mood,
+    bool done = false,
   }) async {
     final now = DateTime.now();
     final note = WorkNote(
@@ -57,6 +58,8 @@ class WorkRepository {
       recordType: recordType,
       tags: tags,
       mood: mood,
+      done: done,
+      doneAt: done ? now : null,
       createdAt: now,
       updatedAt: now,
     );
@@ -70,6 +73,13 @@ class WorkRepository {
     await _db.update(AppTables.workNotes, note.toMap(),
         where: 'id = ?', whereArgs: [note.id]);
     return note;
+  }
+
+  /// 切换待学习项完成状态
+  Future<WorkNote> toggleDone(WorkNote note, bool done) async {
+    note.done = done;
+    note.doneAt = done ? DateTime.now() : null;
+    return update(note);
   }
 
   /// 软删除

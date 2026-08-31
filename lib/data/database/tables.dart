@@ -46,6 +46,8 @@ class AppSql {
       tags TEXT DEFAULT '[]',
       mood TEXT,
       attachments TEXT DEFAULT '[]',
+      done INTEGER NOT NULL DEFAULT 0,
+      done_at TEXT,
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL,
       deleted_at TEXT,

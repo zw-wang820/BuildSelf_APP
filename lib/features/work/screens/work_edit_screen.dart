@@ -7,7 +7,6 @@ import 'package:buildself/data/models/work_note_model.dart';
 import 'package:buildself/data/repositories/work_repository.dart';
 import 'package:buildself/features/auth/providers/app_provider.dart';
 import 'package:buildself/shared/widgets/emoji_icon.dart';
-import 'package:buildself/shared/widgets/mood_selector.dart';
 import 'package:buildself/shared/widgets/tag_chip.dart';
 
 /// 工作记录编辑/新建页
@@ -28,7 +27,7 @@ class _WorkEditScreenState extends State<WorkEditScreen> {
   final _contentController = TextEditingController();
   final _tagController = TextEditingController();
   List<String> _tags = [];
-  Mood? _mood;
+  bool _done = false;
   bool _saving = false;
 
   bool get _isEditing => widget.note != null;
@@ -42,7 +41,7 @@ class _WorkEditScreenState extends State<WorkEditScreen> {
       _titleController.text = note.title;
       _contentController.text = note.content;
       _tags = List.from(note.tags);
-      _mood = note.mood;
+      _done = note.done;
     }
     _loadCategories();
   }
@@ -111,7 +110,9 @@ class _WorkEditScreenState extends State<WorkEditScreen> {
         note.content = _contentController.text.trim();
         note.recordType = _recordType;
         note.tags = _tags;
-        note.mood = _mood;
+        note.done = _done;
+        if (_done && note.doneAt == null) note.doneAt = DateTime.now();
+        if (!_done) note.doneAt = null;
         await _repo.update(note);
       } else {
         await _repo.create(
@@ -120,7 +121,7 @@ class _WorkEditScreenState extends State<WorkEditScreen> {
           content: _contentController.text.trim(),
           recordType: _recordType,
           tags: _tags,
-          mood: _mood,
+          done: _done,
         );
       }
       if (mounted) {
@@ -148,6 +149,24 @@ class _WorkEditScreenState extends State<WorkEditScreen> {
     }
   }
 
+  /// 按类型返回内容输入引导
+  String _contentHint() {
+    switch (_recordType) {
+      case '工作日志':
+        return '今天完成了什么？\n遇到了什么问题 / 怎么解决的？\n明天计划做什么？';
+      case '待学习项':
+        return '想学什么？如：Flutter 状态管理';
+      case '思考':
+        return '记录你的思考、灵感、问题分析...';
+      default:
+        return '记录你的工作心得、经验总结...';
+    }
+  }
+
+  String _formatDateTime(DateTime d) =>
+      '${d.year}/${d.month.toString().padLeft(2, '0')}/${d.day.toString().padLeft(2, '0')} '
+      '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -171,6 +190,8 @@ class _WorkEditScreenState extends State<WorkEditScreen> {
             children: [
               ..._categories.map((type) {
                 return FilterChip(
+                  avatar: Text(workTypeEmoji(type),
+                      style: const TextStyle(fontSize: 13)),
                   label: Text(type),
                   selected: _recordType == type,
                   onSelected: (_) => setState(() => _recordType = type),
@@ -181,7 +202,16 @@ class _WorkEditScreenState extends State<WorkEditScreen> {
               ActionChip(
                 label: const Text('+ 新增'),
                 onPressed: _showAddCategoryDialog,
-                backgroundColor: AppColors.spaceHigh,
+                backgroundColor: Theme.of(context).brightness == Brightness.dark
+                    ? const Color(0xFF1E293B)
+                    : Colors.white,
+                side: BorderSide(
+                  color: AppColors.work.withOpacity(0.5),
+                ),
+                labelStyle: TextStyle(
+                  color: AppColors.textPrimary(context),
+                  fontSize: 13,
+                ),
               ),
             ],
           ),
@@ -191,12 +221,25 @@ class _WorkEditScreenState extends State<WorkEditScreen> {
           TextField(
             controller: _contentController,
             maxLines: 12,
-            decoration: const InputDecoration(hintText: '记录你的经验、心得或反思...'),
+            decoration: InputDecoration(hintText: _contentHint()),
           ),
-          const SizedBox(height: 16),
-          Text(AppStrings.mood, style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: 8),
-          MoodSelector(selected: _mood, onChanged: (mood) => setState(() => _mood = mood)),
+          // 待学习项：完成状态开关
+          if (_recordType == '待学习项') ...[
+            const SizedBox(height: 8),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: const Text('已完成', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+              subtitle: _done && widget.note?.doneAt != null
+                  ? Text(
+                      '完成于 ${_formatDateTime(widget.note!.doneAt!)}',
+                      style: TextStyle(fontSize: 11, color: AppColors.textSecondary(context)),
+                    )
+                  : null,
+              value: _done,
+              activeTrackColor: AppColors.work,
+              onChanged: (v) => setState(() => _done = v),
+            ),
+          ],
           const SizedBox(height: 16),
           Text(AppStrings.tags, style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 8),

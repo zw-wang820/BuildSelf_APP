@@ -70,7 +70,7 @@ class _WorkListScreenState extends State<WorkListScreen> {
               _buildFilterBar(),
               Expanded(
                 child: _loading
-                    ? Center(
+                    ? const Center(
                         child: CircularProgressIndicator(
                           color: AppColors.work,
                           strokeWidth: 2,
@@ -111,22 +111,27 @@ class _WorkListScreenState extends State<WorkListScreen> {
 
   Widget _buildFilterChip(String? type, String label) {
     final isSelected = _filterType == type;
+    final display = type == null ? label : '${workTypeEmoji(type)} $label';
+    final accent = type == null ? AppColors.work : workTypeColor(type);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return FilterChip(
-      label: Text(label),
+      label: Text(display),
       selected: isSelected,
       onSelected: (_) {
         setState(() => _filterType = isSelected ? null : type);
         _loadData();
       },
-      selectedColor: AppColors.work.withOpacity(0.18),
-      checkmarkColor: AppColors.work,
-      backgroundColor: AppColors.spaceHigh,
+      selectedColor: accent.withValues(alpha: 0.15),
+      checkmarkColor: accent,
+      backgroundColor: Colors.transparent,
       labelStyle: TextStyle(
-        color: isSelected ? AppColors.work : AppColors.textSecondary(context),
+        color: isSelected ? accent : AppColors.textSecondary(context),
         fontSize: 13,
       ),
       side: BorderSide(
-        color: AppColors.work.withOpacity(isSelected ? 0.6 : 0.3),
+        color: isSelected
+            ? accent
+            : (isDark ? AppColors.dividerDark : AppColors.dividerLight),
         width: 0.8,
       ),
       shape: const StadiumBorder(),
@@ -154,20 +159,36 @@ class _WorkListScreenState extends State<WorkListScreen> {
   }
 
   Widget _buildNoteCard(WorkNote note) {
-    final color = AppColors.work;
+    const color = AppColors.work;
+    final isLearning = note.recordType == '待学习项';
+    final done = note.done;
 
-    return AppCard(
-      accent: color,
-      margin: const EdgeInsets.only(bottom: 10),
-      onTap: () async {
-        await Navigator.pushNamed(context, AppRoutes.workDetail, arguments: note.id);
-        _loadData();
-      },
+    // 外层 GestureDetector 仅接管长按（删除），点击仍走 AppCard 的 onTap（进详情）
+    return GestureDetector(
+      onLongPress: () => _confirmDelete(note),
+      child: AppCard(
+        accent: color,
+        margin: const EdgeInsets.only(bottom: 10),
+        onTap: () async {
+          await Navigator.pushNamed(context, AppRoutes.workDetail, arguments: note.id);
+          _loadData();
+        },
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
+              // 待学习项：完成勾选框（列表内直接勾选）
+              if (isLearning)
+                SizedBox(
+                  height: 32,
+                  child: Checkbox(
+                    value: done,
+                    activeColor: AppColors.success,
+                    visualDensity: VisualDensity.compact,
+                    onChanged: (v) => _toggleDone(note, v ?? false),
+                  ),
+                ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
@@ -176,7 +197,7 @@ class _WorkListScreenState extends State<WorkListScreen> {
                   border: Border.all(color: color.withOpacity(0.5), width: 0.6),
                 ),
                 child: Text(
-                  note.recordType,
+                  '${workTypeEmoji(note.recordType)} ${note.recordType}',
                   style: TextStyle(
                     fontSize: 10,
                     color: color,
@@ -184,10 +205,6 @@ class _WorkListScreenState extends State<WorkListScreen> {
                   ),
                 ),
               ),
-              if (note.mood != null) ...[
-                const SizedBox(width: 8),
-                Text(note.mood!.emoji, style: const TextStyle(fontSize: 14)),
-              ],
               const Spacer(),
               Text(
                 _formatDate(note.createdAt),
@@ -207,6 +224,8 @@ class _WorkListScreenState extends State<WorkListScreen> {
                 fontSize: 15,
                 fontWeight: FontWeight.w700,
                 color: AppColors.textPrimary(context),
+                decoration: done ? TextDecoration.lineThrough : null,
+                decorationColor: AppColors.textSecondary(context),
               ),
             ),
           ],
@@ -217,9 +236,13 @@ class _WorkListScreenState extends State<WorkListScreen> {
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
               fontSize: 14,
-              color: AppColors.textSecondary(context),
+              color: done
+                  ? AppColors.textSecondary(context).withValues(alpha: 0.6)
+                  : AppColors.textSecondary(context),
               height: 1.5,
               letterSpacing: 0.3,
+              decoration: done ? TextDecoration.lineThrough : null,
+              decorationColor: AppColors.textSecondary(context),
             ),
           ),
           if (note.tags.isNotEmpty) ...[
@@ -232,6 +255,42 @@ class _WorkListScreenState extends State<WorkListScreen> {
           ],
         ],
       ),
+      ),
+    );
+  }
+
+  /// 待学习项完成/取消（列表内直接勾选）
+  Future<void> _toggleDone(WorkNote note, bool done) async {
+    await _repo.toggleDone(note, done);
+    if (mounted) _loadData();
+  }
+
+  /// 长按删除 — 二次确认后移入回收站
+  Future<void> _confirmDelete(WorkNote note) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('删除记录'),
+        content: const Text('确定删除这条记录吗？删除后可在回收站恢复，30天后永久清除。'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(AppStrings.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: AppColors.error),
+            child: Text(AppStrings.delete),
+          ),
+        ],
+      ),
+    );
+    if (ok != true || !mounted) return;
+    await _repo.softDelete(note.id);
+    if (!mounted) return;
+    _loadData();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(AppStrings.deleteSuccess)),
     );
   }
 

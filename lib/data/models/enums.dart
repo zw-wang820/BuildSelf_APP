@@ -29,12 +29,14 @@ enum Weather {
 
 /// 工作记录类型
 enum WorkRecordType {
-  experience('经验'),
-  insight('心得'),
-  reflection('反思');
+  insight('心得', '💡'),
+  thought('思考', '🤔'),
+  journal('工作日志', '📝'),
+  learning('待学习项', '📚');
 
-  const WorkRecordType(this.label);
+  const WorkRecordType(this.label, this.emoji);
   final String label;
+  final String emoji;
 }
 
 /// 生活记录类型

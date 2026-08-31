@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:buildself/core/constants/colors.dart';
 import 'package:buildself/core/constants/strings.dart';
+import 'package:buildself/core/router/routes.dart';
 import 'package:buildself/data/models/work_note_model.dart';
 import 'package:buildself/data/repositories/work_repository.dart';
 import 'package:buildself/shared/widgets/emoji_icon.dart';
@@ -56,7 +57,8 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
             IconButton(
               icon: const EmojiIcon('✏️', size: 20),
               onPressed: () async {
-                await Navigator.pushNamed(context, '/work/edit', arguments: WorkEditArgs(note: _note));
+                await Navigator.pushNamed(context, AppRoutes.workEdit,
+                    arguments: _note);
                 _loadNote();
               },
             ),
@@ -88,7 +90,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
             color: AppColors.work.withOpacity(0.15),
             borderRadius: BorderRadius.circular(4),
           ),
-          child: Text(note.recordType,
+          child: Text('${workTypeEmoji(note.recordType)} ${note.recordType}',
               style: const TextStyle(fontSize: 12, color: AppColors.work, fontWeight: FontWeight.w600)),
         ),
         const SizedBox(height: 12),
@@ -97,11 +99,29 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         const SizedBox(height: 8),
         Row(children: [
           Text(_formatDate(note.createdAt), style: TextStyle(fontSize: 12, color: AppColors.textSecondary(context))),
-          if (note.mood != null) ...[
-            const SizedBox(width: 12),
-            Text(note.mood!.emoji, style: const TextStyle(fontSize: 16)),
-          ],
         ]),
+        // 待学习项完成状态
+        if (note.recordType == '待学习项') ...[
+          const SizedBox(height: 10),
+          Row(children: [
+            Icon(
+              note.done ? Icons.check_circle : Icons.radio_button_unchecked,
+              size: 16,
+              color: note.done ? AppColors.success : AppColors.textSecondary(context),
+            ),
+            const SizedBox(width: 6),
+            Text(
+              note.done
+                  ? '已完成${note.doneAt != null ? ' · ${_formatDate(note.doneAt!)}' : ''}'
+                  : '未完成',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: note.done ? AppColors.success : AppColors.textSecondary(context),
+              ),
+            ),
+          ]),
+        ],
         const SizedBox(height: 16),
         const Divider(),
         const SizedBox(height: 16),
@@ -135,10 +155,4 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       ),
     );
   }
-}
-
-/// 编辑页参数
-class WorkEditArgs {
-  final WorkNote? note;
-  WorkEditArgs({this.note});
 }

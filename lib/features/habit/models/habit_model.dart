@@ -29,12 +29,12 @@ class HabitLog {
 class Habit {
   final String id;
   final String userId;
-  final String name;
-  final String icon; // emoji
-  final int colorIndex; // 习惯色板下标
+  String name;
+  String icon; // emoji
+  int colorIndex; // 习惯色板下标
   final DateTime createdAt;
 
-  const Habit({
+  Habit({
     required this.id,
     required this.userId,
     required this.name,

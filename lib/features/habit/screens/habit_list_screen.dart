@@ -96,10 +96,33 @@ class _HabitListScreenState extends State<HabitListScreen> {
       context,
       userId: _userId,
       repository: _repo,
-      onCreated: (habit) {
+      onChanged: (habit) {
         ToastHelper.show(context, '✅ 习惯创建成功！');
       },
     );
+    if (mounted) _loadData();
+  }
+
+  /// 编辑习惯（点卡片进入）— 支持改名/图标/颜色/删除
+  Future<void> _openEdit(Habit habit) async {
+    await showAddHabitSheet(
+      context,
+      userId: _userId,
+      repository: _repo,
+      habit: habit,
+      onChanged: (_) {
+        ToastHelper.show(context, '✅ 习惯已更新');
+      },
+      onDeleted: () {
+        ToastHelper.show(context, '习惯已删除');
+      },
+    );
+    if (mounted) _loadData();
+  }
+
+  /// 打开习惯总览统计页，返回后刷新
+  Future<void> _openOverview() async {
+    await Navigator.pushNamed(context, AppRoutes.habitOverview);
     if (mounted) _loadData();
   }
 
@@ -125,7 +148,16 @@ class _HabitListScreenState extends State<HabitListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('习惯打卡')),
+      appBar: AppBar(
+        title: const Text('习惯打卡'),
+        actions: [
+          // 总览统计入口
+          IconButton(
+            icon: const EmojiIcon('📊', size: 21),
+            onPressed: _openOverview,
+          ),
+        ],
+      ),
       body: RefreshIndicator(
         onRefresh: _loadData,
         child: _loading
@@ -186,6 +218,7 @@ class _HabitListScreenState extends State<HabitListScreen> {
       onToggleToday: (check) => _toggleToday(habit, check),
       onMakeupYesterday: () => _makeupYesterday(habit),
       onStats: () => _openStats(habit),
+      onEdit: () => _openEdit(habit),
     );
   }
 

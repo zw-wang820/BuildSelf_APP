@@ -31,6 +31,25 @@ class HabitRepository {
     return habit;
   }
 
+  /// 更新习惯（名称/图标/颜色）
+  Future<void> update(Habit habit) async {
+    await _db.update(
+      AppTables.habits,
+      {
+        'name': habit.name,
+        'icon': habit.icon,
+        'color_index': habit.colorIndex,
+      },
+      where: 'id = ?',
+      whereArgs: [habit.id],
+    );
+  }
+
+  /// 删除习惯（打卡记录靠表级联删除）
+  Future<void> delete(String habitId) async {
+    await _db.delete(AppTables.habits, where: 'id = ?', whereArgs: [habitId]);
+  }
+
   /// 全部习惯（按创建时间倒序）
   Future<List<Habit>> getAll(String userId) async {
     final maps = await _db.queryAll(

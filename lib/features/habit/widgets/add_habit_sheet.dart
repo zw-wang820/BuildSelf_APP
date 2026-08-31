@@ -6,14 +6,17 @@ import 'package:buildself/shared/widgets/emoji_icon.dart';
 import 'package:buildself/shared/widgets/gradient_button.dart';
 import 'package:buildself/shared/widgets/toast.dart';
 
-/// 弹出「新建习惯」底部表单
+/// 弹出「新建/编辑习惯」底部表单
 ///
-/// 创建成功后调用 [onCreated] 并关闭表单
+/// [habit] 非空 = 编辑模式（预填 + 保存更新 + 提供删除）。
+/// 创建/更新成功后调用 [onChanged] 并关闭表单；删除成功后调用 [onDeleted]。
 Future<void> showAddHabitSheet(
   BuildContext context, {
   required String userId,
   required HabitRepository repository,
-  required ValueChanged<Habit> onCreated,
+  Habit? habit,
+  required ValueChanged<Habit> onChanged,
+  VoidCallback? onDeleted,
 }) {
   return showModalBottomSheet(
     context: context,
@@ -22,7 +25,9 @@ Future<void> showAddHabitSheet(
     builder: (_) => _AddHabitSheet(
       userId: userId,
       repository: repository,
-      onCreated: onCreated,
+      habit: habit,
+      onChanged: onChanged,
+      onDeleted: onDeleted,
     ),
   );
 }
@@ -30,12 +35,16 @@ Future<void> showAddHabitSheet(
 class _AddHabitSheet extends StatefulWidget {
   final String userId;
   final HabitRepository repository;
-  final ValueChanged<Habit> onCreated;
+  final Habit? habit;
+  final ValueChanged<Habit> onChanged;
+  final VoidCallback? onDeleted;
 
   const _AddHabitSheet({
     required this.userId,
     required this.repository,
-    required this.onCreated,
+    this.habit,
+    required this.onChanged,
+    this.onDeleted,
   });
 
   @override
@@ -44,9 +53,22 @@ class _AddHabitSheet extends StatefulWidget {
 
 class _AddHabitSheetState extends State<_AddHabitSheet> {
   final _nameCtrl = TextEditingController();
-  String _icon = kHabitIcons.first;
-  int _colorIndex = 0;
-  bool _creating = false;
+  late String _icon;
+  late int _colorIndex;
+  bool _saving = false;
+
+  bool get _isEdit => widget.habit != null;
+
+  @override
+  void initState() {
+    super.initState();
+    final habit = widget.habit;
+    _icon = habit?.icon ?? kHabitIcons.first;
+    _colorIndex = habit?.colorIndex ?? 0;
+    if (habit != null) {
+      _nameCtrl.text = habit.name;
+    }
+  }
 
   @override
   void dispose() {
@@ -54,27 +76,72 @@ class _AddHabitSheetState extends State<_AddHabitSheet> {
     super.dispose();
   }
 
-  Future<void> _create() async {
+  Future<void> _save() async {
     final name = _nameCtrl.text.trim();
     if (name.isEmpty) {
       ToastHelper.show(context, '请先输入习惯名称');
       return;
     }
-    setState(() => _creating = true);
+    setState(() => _saving = true);
     try {
-      final habit = await widget.repository.create(
-        userId: widget.userId,
-        name: name,
-        icon: _icon,
-        colorIndex: _colorIndex,
-      );
-      if (!mounted) return;
-      widget.onCreated(habit);
+      final habit = widget.habit;
+      if (habit != null) {
+        // 编辑模式
+        habit.name = name;
+        habit.icon = _icon;
+        habit.colorIndex = _colorIndex;
+        await widget.repository.update(habit);
+        if (!mounted) return;
+        widget.onChanged(habit);
+      } else {
+        // 新建模式
+        final created = await widget.repository.create(
+          userId: widget.userId,
+          name: name,
+          icon: _icon,
+          colorIndex: _colorIndex,
+        );
+        if (!mounted) return;
+        widget.onChanged(created);
+      }
       Navigator.pop(context);
     } catch (_) {
       if (!mounted) return;
-      setState(() => _creating = false);
-      ToastHelper.show(context, '创建失败，请重试');
+      setState(() => _saving = false);
+      ToastHelper.show(context, '保存失败，请重试');
+    }
+  }
+
+  /// 删除习惯 — 二次确认（打卡记录级联删除）
+  Future<void> _confirmDelete() async {
+    final habit = widget.habit;
+    if (habit == null) return;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('删除习惯'),
+        content: Text('确定删除「${habit.name}」吗？\n该习惯的全部打卡记录将一并删除。'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('取消'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: AppColors.error),
+            child: const Text('删除'),
+          ),
+        ],
+      ),
+    );
+    if (ok != true || !mounted) return;
+    try {
+      await widget.repository.delete(habit.id);
+      if (!mounted) return;
+      widget.onDeleted?.call();
+      Navigator.pop(context);
+    } catch (_) {
+      if (mounted) ToastHelper.show(context, '删除失败，请重试');
     }
   }
 
@@ -105,9 +172,9 @@ class _AddHabitSheetState extends State<_AddHabitSheet> {
               // 标题 + 关闭
               Row(
                 children: [
-                  const Text(
-                    '新建习惯',
-                    style: TextStyle(
+                  Text(
+                    _isEdit ? '编辑习惯' : '新建习惯',
+                    style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
                     ),
@@ -135,7 +202,7 @@ class _AddHabitSheetState extends State<_AddHabitSheet> {
                     borderSide: BorderSide.none,
                   ),
                 ),
-                onSubmitted: (_) => _create(),
+                onSubmitted: (_) => _save(),
               ),
               const SizedBox(height: 16),
               // 图标选择
@@ -168,17 +235,42 @@ class _AddHabitSheetState extends State<_AddHabitSheet> {
                 ],
               ),
               const SizedBox(height: 20),
-              // 创建按钮
+              // 保存按钮
               GradientButton(
-                label: '创建习惯',
-                icon: Icons.auto_awesome,
+                label: _isEdit ? '保存修改' : '创建习惯',
+                icon: _isEdit ? Icons.save_outlined : Icons.auto_awesome,
                 gradient: LinearGradient(
                   colors: [accent, accent.withValues(alpha: 0.75)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                onPressed: _creating ? null : _create,
+                onPressed: _saving ? null : _save,
               ),
+              // 编辑模式：删除习惯
+              if (_isEdit) ...[
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  height: 46,
+                  child: OutlinedButton.icon(
+                    onPressed: _saving ? null : _confirmDelete,
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.error,
+                      side: BorderSide(
+                        color: AppColors.error.withValues(alpha: 0.5),
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    icon: const Icon(Icons.delete_outline, size: 18),
+                    label: const Text(
+                      '删除习惯',
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ),
+              ],
             ],
           ),
         ),

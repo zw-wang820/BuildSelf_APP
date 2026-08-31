@@ -5,6 +5,7 @@ import 'package:buildself/features/todo/widgets/todo_checkbox.dart';
 import 'package:buildself/shared/widgets/app_card.dart';
 
 /// 习惯卡片 — 图标 + 名称 + 连续天数 + 统计入口 + 今日打卡圈 + 补昨天
+/// 点击卡片主体（非按钮区域）进入编辑
 class HabitItemCard extends StatelessWidget {
   final Habit habit;
   final bool checkedToday;
@@ -13,6 +14,7 @@ class HabitItemCard extends StatelessWidget {
   final ValueChanged<bool> onToggleToday;
   final VoidCallback? onMakeupYesterday;
   final VoidCallback? onStats;
+  final VoidCallback? onEdit;
 
   const HabitItemCard({
     Key? key,
@@ -23,6 +25,7 @@ class HabitItemCard extends StatelessWidget {
     required this.onToggleToday,
     this.onMakeupYesterday,
     this.onStats,
+    this.onEdit,
   }) : super(key: key);
 
   Color get _color =>
@@ -33,6 +36,7 @@ class HabitItemCard extends StatelessWidget {
     final canMakeup = !checkedYesterday && onMakeupYesterday != null;
     return AppCard(
       accent: _color,
+      onTap: onEdit,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       child: Column(
         children: [

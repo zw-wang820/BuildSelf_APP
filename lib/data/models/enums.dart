@@ -41,12 +41,13 @@ enum WorkRecordType {
 
 /// 生活记录类型
 enum LifeRecordType {
-  beauty('美好'),
-  insight('感悟'),
-  reflection('反思');
+  beauty('美好', '🌸'),
+  insight('感悟', '💡'),
+  reflection('反思', '🤔');
 
-  const LifeRecordType(this.label);
+  const LifeRecordType(this.label, this.emoji);
   final String label;
+  final String emoji;
 }
 
 /// 目标类型

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:buildself/core/constants/colors.dart';
 import 'package:buildself/core/constants/strings.dart';
 import 'package:buildself/data/models/enums.dart';
+import 'package:buildself/data/models/life_record_model.dart';
 import 'package:buildself/data/repositories/life_repository.dart';
 import 'package:buildself/features/auth/providers/app_provider.dart';
 import 'package:buildself/shared/widgets/mood_selector.dart';
@@ -22,7 +23,6 @@ class _LifeEditScreenState extends State<LifeEditScreen> {
   final _titleController = TextEditingController();
   final _contentController = TextEditingController();
   Mood? _mood;
-  Weather? _weather;
   final _locationController = TextEditingController();
   bool _saving = false;
 
@@ -102,7 +102,6 @@ class _LifeEditScreenState extends State<LifeEditScreen> {
         content: _contentController.text.trim(),
         recordType: _recordType,
         mood: _mood,
-        weather: _weather,
         location: _locationController.text.trim().isEmpty
             ? null
             : _locationController.text.trim(),
@@ -162,6 +161,8 @@ class _LifeEditScreenState extends State<LifeEditScreen> {
               children: [
                 ..._categories.map((type) {
                   return FilterChip(
+                    avatar: Text(lifeTypeEmoji(type),
+                        style: const TextStyle(fontSize: 13)),
                     label: Text(type),
                     selected: _recordType == type,
                     onSelected: (_) => setState(() => _recordType = type),
@@ -172,7 +173,14 @@ class _LifeEditScreenState extends State<LifeEditScreen> {
                 ActionChip(
                   label: const Text('+ 新增'),
                   onPressed: _showAddCategoryDialog,
-                  backgroundColor: AppColors.spaceHigh,
+                  backgroundColor: Theme.of(context).brightness == Brightness.dark
+                      ? const Color(0xFF1E293B)
+                      : Colors.white,
+                  side: BorderSide(color: AppColors.life.withOpacity(0.5)),
+                  labelStyle: TextStyle(
+                    color: AppColors.textPrimary(context),
+                    fontSize: 13,
+                  ),
                 ),
               ],
             ),
@@ -191,22 +199,6 @@ class _LifeEditScreenState extends State<LifeEditScreen> {
 
             // 图片添加
             _buildImagePicker(),
-            const SizedBox(height: 16),
-
-            // 天气
-            Text(AppStrings.weather, style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              children: Weather.values.map((w) {
-                return FilterChip(
-                  label: Text('${w.emoji} ${w.label}'),
-                  selected: _weather == w,
-                  onSelected: (_) =>
-                      setState(() => _weather = _weather == w ? null : w),
-                );
-              }).toList(),
-            ),
             const SizedBox(height: 16),
 
             // 心情

@@ -55,6 +55,13 @@ class _LifeListScreenState extends State<LifeListScreen> {
       appBar: AppBar(
         title: Text(AppStrings.lifeTitle),
         actions: [
+          // 生活统计入口
+          IconButton(
+            icon: const EmojiIcon('📊', size: 21),
+            tooltip: '生活统计',
+            onPressed: () =>
+                Navigator.pushNamed(context, AppRoutes.lifeStats),
+          ),
           IconButton(
             icon: const EmojiIcon('🔍', size: 21),
             onPressed: () => _showSearch(context),
@@ -109,22 +116,27 @@ class _LifeListScreenState extends State<LifeListScreen> {
 
   Widget _buildFilterChip(String? type, String label) {
     final isSelected = _filterType == type;
+    final display = type == null ? label : '${lifeTypeEmoji(type)} $label';
+    final accent = type == null ? AppColors.life : lifeTypeColor(type);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return FilterChip(
-      label: Text(label),
+      label: Text(display),
       selected: isSelected,
       onSelected: (_) {
         setState(() => _filterType = isSelected ? null : type);
         _loadData();
       },
-      selectedColor: AppColors.life.withOpacity(0.18),
-      checkmarkColor: AppColors.life,
-      backgroundColor: AppColors.spaceHigh,
+      selectedColor: accent.withValues(alpha: 0.15),
+      checkmarkColor: accent,
+      backgroundColor: Colors.transparent,
       labelStyle: TextStyle(
-        color: isSelected ? AppColors.life : AppColors.textSecondary(context),
+        color: isSelected ? accent : AppColors.textSecondary(context),
         fontSize: 13,
       ),
       side: BorderSide(
-        color: AppColors.life.withOpacity(isSelected ? 0.6 : 0.3),
+        color: isSelected
+            ? accent
+            : (isDark ? AppColors.dividerDark : AppColors.dividerLight),
         width: 0.8,
       ),
       shape: const StadiumBorder(),
@@ -182,10 +194,6 @@ class _LifeListScreenState extends State<LifeListScreen> {
               if (record.mood != null) ...[
                 const SizedBox(width: 8),
                 Text(record.mood!.emoji, style: const TextStyle(fontSize: 14)),
-              ],
-              if (record.weather != null) ...[
-                const SizedBox(width: 4),
-                Text(record.weather!.emoji, style: const TextStyle(fontSize: 14)),
               ],
               const Spacer(),
               Text(
@@ -397,18 +405,13 @@ class _LifeDetailSheet extends StatelessWidget {
           const SizedBox(height: 16),
 
           // 元信息
-          if (record.mood != null || record.weather != null || (record.location != null && record.location!.isNotEmpty)) ...[
+          if (record.mood != null || (record.location != null && record.location!.isNotEmpty)) ...[
             Divider(color: AppColors.dividerDark, height: 1),
             const SizedBox(height: 8),
             Row(
               children: [
                 if (record.mood != null) ...[
                   Text('${record.mood!.emoji} ${record.mood!.label}',
-                      style: TextStyle(fontSize: 13, color: AppColors.textSecondary(context))),
-                  const SizedBox(width: 16),
-                ],
-                if (record.weather != null) ...[
-                  Text('${record.weather!.emoji} ${record.weather!.label}',
                       style: TextStyle(fontSize: 13, color: AppColors.textSecondary(context))),
                   const SizedBox(width: 16),
                 ],

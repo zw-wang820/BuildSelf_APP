@@ -33,6 +33,7 @@ class AppRoutes {
   static const String lifeList = '/life';
   static const String lifeDetail = '/life/detail';
   static const String lifeEdit = '/life/edit';
+  static const String lifeStats = '/life/stats';
 
   // 目标模块
   static const String goalBoard = '/goal';

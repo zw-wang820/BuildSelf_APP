@@ -1,6 +1,28 @@
 import 'dart:convert';
+import 'package:flutter/material.dart';
+import 'package:buildself/core/constants/colors.dart';
 import 'package:buildself/data/models/enums.dart';
 import 'package:buildself/data/models/image_ref_model.dart';
+
+/// 生活记录类型对应的 emoji（自定义分类返回 📌）
+String lifeTypeEmoji(String type) {
+  for (final t in LifeRecordType.values) {
+    if (t.label == type) return t.emoji;
+  }
+  return '📌';
+}
+
+/// 生活记录类型对应的场景色（自定义分类回落生活主题色）
+Color lifeTypeColor(String type) {
+  switch (type) {
+    case '感悟':
+      return AppColors.info;
+    case '反思':
+      return AppColors.warning;
+    default:
+      return AppColors.life;
+  }
+}
 
 /// 生活记录模型
 class LifeRecord {

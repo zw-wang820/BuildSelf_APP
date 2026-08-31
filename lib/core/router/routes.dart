@@ -37,6 +37,7 @@ class AppRoutes {
   static const String goalBoard = '/goal';
   static const String goalDetail = '/goal/detail';
   static const String goalEdit = '/goal/edit';
+  static const String goalStats = '/goal/stats';
   static const String achievementWall = '/goal/achievements';
 
   // 阅读模块

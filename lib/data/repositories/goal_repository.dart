@@ -131,6 +131,13 @@ class GoalRepository {
     return maps.map(Goal.fromMap).toList();
   }
 
+  /// 获取全部未删除目标（统计页内存过滤用）
+  Future<List<Goal>> getAllGoals(String userId) async {
+    final maps = await _db.queryAll(AppTables.goals,
+        where: 'user_id = ? AND deleted_at IS NULL', whereArgs: [userId]);
+    return maps.map(Goal.fromMap).toList();
+  }
+
   /// 取近段时间内有活动（创建/更新）的日期戳，用于连续天数推导
   Future<List<String>> getActiveDateStamps(String userId, DateTime since) async {
     final maps = await _db.rawQuery(

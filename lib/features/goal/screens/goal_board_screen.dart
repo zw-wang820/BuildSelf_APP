@@ -174,6 +174,13 @@ class _GoalBoardScreenState extends State<GoalBoardScreen> {
       appBar: AppBar(
         title: const Text('目标管理'),
         actions: [
+          // 目标统计入口
+          IconButton(
+            icon: const EmojiIcon('📊', size: 21),
+            tooltip: '目标统计',
+            onPressed: () =>
+                Navigator.pushNamed(context, AppRoutes.goalStats),
+          ),
           IconButton(
             icon: const Icon(Icons.emoji_events_outlined),
             tooltip: AppStrings.achievementWall,

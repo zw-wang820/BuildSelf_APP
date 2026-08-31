@@ -9,6 +9,7 @@ import 'package:buildself/data/repositories/goal_repository.dart';
 import 'package:buildself/features/auth/providers/app_provider.dart';
 import 'package:buildself/features/goal/widgets/add_goal_sheet.dart';
 import 'package:buildself/features/goal/widgets/goal_item_card.dart';
+import 'package:buildself/shared/layouts/main_scaffold.dart';
 import 'package:buildself/shared/widgets/emoji_icon.dart';
 import 'package:buildself/shared/widgets/nexus_background.dart';
 import 'package:buildself/shared/widgets/toast.dart';
@@ -200,6 +201,8 @@ class _GoalBoardScreenState extends State<GoalBoardScreen> {
         foregroundColor: Colors.white,
         child: const EmojiIcon('➕', size: 22),
       ),
+      // 底部 tab 常驻页时抬升到导航栏上方（同书架页修复）
+      floatingActionButtonLocation: const FloatingAboveNavLocation(),
     );
   }
 

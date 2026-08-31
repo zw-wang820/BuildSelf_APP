@@ -537,6 +537,8 @@ class _AddTodoSheetState extends State<_AddTodoSheet> {
                 controller: _contentCtrl,
                 autofocus: false,
                 maxLength: 60,
+                maxLines: 3,
+                minLines: 1,
                 decoration: const InputDecoration(
                   labelText: '待办内容',
                   hintText: '今天要做什么？',

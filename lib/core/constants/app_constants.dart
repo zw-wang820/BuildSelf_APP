@@ -9,7 +9,7 @@ class AppConstants {
 
   // 数据库
   static const String databaseName = 'buildself.db';
-  static const int databaseVersion = 9;
+  static const int databaseVersion = 10;
 
   // 本地存储 Key
   static const String keyUserId = 'user_id';
@@ -35,4 +35,7 @@ class AppConstants {
 
   // 备份提醒间隔天数
   static const int backupReminderDays = 30;
+
+  // KISS 复盘
+  static const int maxReviewTextLen = 500;          // 单条复盘项最大字数
 }

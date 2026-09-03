@@ -17,6 +17,8 @@ class AppTables {
   static const String todoCategories = 'todo_categories';
   static const String habits = 'habits';
   static const String habitLogs = 'habit_logs';
+  static const String reviewSessions = 'review_sessions';
+  static const String reviewItems = 'review_items';
 }
 
 /// 建表 SQL
@@ -237,6 +239,36 @@ class AppSql {
     )
   ''';
 
+  /// KISS 复盘 — 每日一次复盘（review_date 每用户每日唯一）
+  static const String createReviewSessions = '''
+    CREATE TABLE IF NOT EXISTS ${AppTables.reviewSessions} (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      review_date TEXT NOT NULL,
+      summary TEXT,
+      summary_at TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      deleted_at TEXT,
+      FOREIGN KEY (user_id) REFERENCES ${AppTables.users}(user_id),
+      UNIQUE (user_id, review_date)
+    )
+  ''';
+
+  /// KISS 复盘 — 四象限条目（keep/improve/start/stop）
+  static const String createReviewItems = '''
+    CREATE TABLE IF NOT EXISTS ${AppTables.reviewItems} (
+      id TEXT PRIMARY KEY,
+      session_id TEXT NOT NULL,
+      quadrant TEXT NOT NULL,
+      content TEXT NOT NULL,
+      position INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      FOREIGN KEY (session_id) REFERENCES ${AppTables.reviewSessions}(id) ON DELETE CASCADE
+    )
+  ''';
+
   /// 所有建表语句
   static const List<String> allCreateStatements = [
     createUsers,
@@ -253,6 +285,8 @@ class AppSql {
     createTodoCategories,
     createHabits,
     createHabitLogs,
+    createReviewSessions,
+    createReviewItems,
   ];
 
   /// 索引创建语句
@@ -274,5 +308,8 @@ class AppSql {
     'CREATE INDEX IF NOT EXISTS idx_habits_user ON ${AppTables.habits}(user_id)',
     'CREATE INDEX IF NOT EXISTS idx_habit_logs_habit ON ${AppTables.habitLogs}(habit_id)',
     'CREATE INDEX IF NOT EXISTS idx_habit_logs_date ON ${AppTables.habitLogs}(date)',
+    'CREATE INDEX IF NOT EXISTS idx_review_sessions_user_date ON ${AppTables.reviewSessions}(user_id, review_date)',
+    'CREATE INDEX IF NOT EXISTS idx_review_items_session ON ${AppTables.reviewItems}(session_id)',
+    'CREATE INDEX IF NOT EXISTS idx_review_items_quadrant ON ${AppTables.reviewItems}(quadrant)',
   ];
 }

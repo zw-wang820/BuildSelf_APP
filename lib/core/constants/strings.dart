@@ -125,6 +125,31 @@ class AppStrings {
   static String get murmurHint => _t('murmurHint');
   static String get murmurSave => _t('murmurSave');
 
+  // ============ KISS 复盘模块 ============
+  static String get reviewTitle => _t('reviewTitle');
+  static String get reviewShort => _t('reviewShort');
+  static String get reviewSubtitle => _t('reviewSubtitle');
+  static String get reviewGenerate => _t('reviewGenerate');
+  static String get reviewHistory => _t('reviewHistory');
+  static String get reviewEntryHint => _t('reviewEntryHint');
+  static String get reviewEditExisting => _t('reviewEditExisting');
+  static String get reviewViewHistory => _t('reviewViewHistory');
+  static String get reviewContinueEdit => _t('reviewContinueEdit');
+  static String get reviewEmpty => _t('reviewEmpty');
+  static String get reviewAddFirst => _t('reviewAddFirst');
+  static String get reviewItemHint => _t('reviewItemHint');
+  static String get reviewCopy => _t('reviewCopy');
+  static String get reviewSaveSummary => _t('reviewSaveSummary');
+  static String get reviewCopied => _t('reviewCopied');
+  static String get reviewSummarySaved => _t('reviewSummarySaved');
+  static String get reviewNoSummary => _t('reviewNoSummary');
+  static String get reviewDeleteDay => _t('reviewDeleteDay');
+  static String get reviewDeleteDayConfirm => _t('reviewDeleteDayConfirm');
+  static String get reviewReadOnly => _t('reviewReadOnly');
+  static String get reviewToday => _t('reviewToday');
+  static String get reviewItemDeleted => _t('reviewItemDeleted');
+  static String get reviewDayDeleted => _t('reviewDayDeleted');
+
   // ============ 设置 ============
   static String get settings => _t('settings');
   static String get backupRestore => _t('backupRestore');
@@ -258,6 +283,30 @@ class AppStrings {
       'murmurTitle': '碎碎念',
       'murmurHint': '此刻在想什么...',
       'murmurSave': '记下',
+      // KISS 复盘
+      'reviewTitle': '每日复盘',
+      'reviewShort': '复盘',
+      'reviewSubtitle': 'Keep · Improve · Start · Stop',
+      'reviewGenerate': '生成总结',
+      'reviewHistory': '历史复盘',
+      'reviewEntryHint': '未复盘',
+      'reviewEditExisting': '今日已有 {n} 条复盘，是否继续编辑？',
+      'reviewViewHistory': '查看历史',
+      'reviewContinueEdit': '继续编辑',
+      'reviewEmpty': '还没有复盘项',
+      'reviewAddFirst': '点 + 号写下第一条',
+      'reviewItemHint': '写下你的思考…',
+      'reviewCopy': '复制',
+      'reviewSaveSummary': '保存总结',
+      'reviewCopied': '已复制',
+      'reviewSummarySaved': '总结已保存',
+      'reviewNoSummary': '尚未生成总结',
+      'reviewDeleteDay': '删除整日复盘',
+      'reviewDeleteDayConfirm': '删除后可在回收站恢复，确定删除？',
+      'reviewReadOnly': '只读',
+      'reviewToday': '今日',
+      'reviewItemDeleted': '已删除该条',
+      'reviewDayDeleted': '已删除整日复盘',
       'settings': '设置',
       'backupRestore': '备份与恢复',
       'dataExport': '数据导出',
@@ -385,6 +434,30 @@ class AppStrings {
       'murmurTitle': '碎碎念',
       'murmurHint': '此刻在想什麼...',
       'murmurSave': '記下',
+      // KISS 每日復盤
+      'reviewTitle': '每日復盤',
+      'reviewShort': '復盤',
+      'reviewSubtitle': 'Keep · Improve · Start · Stop',
+      'reviewGenerate': '產生總結',
+      'reviewHistory': '歷史復盤',
+      'reviewEntryHint': '未復盤',
+      'reviewEditExisting': '今日已有 {n} 條復盤，是否繼續編輯？',
+      'reviewViewHistory': '查看歷史',
+      'reviewContinueEdit': '繼續編輯',
+      'reviewEmpty': '還沒有復盤項',
+      'reviewAddFirst': '點 + 號寫下第一條',
+      'reviewItemHint': '寫下你的思考…',
+      'reviewCopy': '複製',
+      'reviewSaveSummary': '儲存總結',
+      'reviewCopied': '已複製',
+      'reviewSummarySaved': '總結已儲存',
+      'reviewNoSummary': '尚未產生總結',
+      'reviewDeleteDay': '刪除整日復盤',
+      'reviewDeleteDayConfirm': '刪除後可在資源回收筒還原，確定刪除？',
+      'reviewReadOnly': '唯讀',
+      'reviewToday': '今日',
+      'reviewItemDeleted': '已刪除該條',
+      'reviewDayDeleted': '已刪除整日復盤',
       'settings': '設定',
       'backupRestore': '備份與恢復',
       'dataExport': '數據匯出',
@@ -512,6 +585,30 @@ class AppStrings {
       'murmurTitle': 'Murmurs',
       'murmurHint': 'What are you thinking...',
       'murmurSave': 'Save',
+      // KISS Review
+      'reviewTitle': 'Daily Review',
+      'reviewShort': 'Review',
+      'reviewSubtitle': 'Keep · Improve · Start · Stop',
+      'reviewGenerate': 'Summary',
+      'reviewHistory': 'History',
+      'reviewEntryHint': 'Not reviewed',
+      'reviewEditExisting': '{n} items reviewed today. Continue editing?',
+      'reviewViewHistory': 'View history',
+      'reviewContinueEdit': 'Continue editing',
+      'reviewEmpty': 'Nothing yet',
+      'reviewAddFirst': 'Tap + to add your first item',
+      'reviewItemHint': 'Type your thought…',
+      'reviewCopy': 'Copy',
+      'reviewSaveSummary': 'Save summary',
+      'reviewCopied': 'Copied',
+      'reviewSummarySaved': 'Summary saved',
+      'reviewNoSummary': 'No summary yet',
+      'reviewDeleteDay': 'Delete this day',
+      'reviewDeleteDayConfirm': 'It can be restored from trash. Delete?',
+      'reviewReadOnly': 'Read-only',
+      'reviewToday': 'Today',
+      'reviewItemDeleted': 'Item deleted',
+      'reviewDayDeleted': 'Day review deleted',
       'settings': 'Settings',
       'backupRestore': 'Backup & Restore',
       'dataExport': 'Data Export',

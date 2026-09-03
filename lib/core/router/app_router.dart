@@ -26,6 +26,8 @@ import 'package:buildself/features/reading/screens/note_edit_screen.dart';
 import 'package:buildself/features/reading/guide/reading_guide_screen.dart';
 import 'package:buildself/features/reading/guide/reading_guide_detail_screen.dart';
 import 'package:buildself/features/murmur/screens/murmur_screen.dart';
+import 'package:buildself/features/review/screens/review_screen.dart';
+import 'package:buildself/features/review/screens/review_history_screen.dart';
 import 'package:buildself/features/search/screens/search_screen.dart';
 import 'package:buildself/features/todo/screens/todo_list_screen.dart';
 import 'package:buildself/features/todo/screens/todo_stats_screen.dart';
@@ -118,6 +120,18 @@ class AppRouter {
       // 碎碎念模块
       case AppRoutes.murmur:
         return _buildRoute(const MurmurScreen(), settings);
+
+      // KISS 复盘模块
+      case AppRoutes.review:
+        final date = settings.arguments is DateTime
+            ? settings.arguments as DateTime
+            : null;
+        return _buildRoute(
+          ReviewScreen(date: date, readOnly: date != null),
+          settings,
+        );
+      case AppRoutes.reviewHistory:
+        return _buildRoute(const ReviewHistoryScreen(), settings);
 
       // 搜索
       case AppRoutes.search:

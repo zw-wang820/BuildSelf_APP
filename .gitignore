@@ -63,6 +63,13 @@ app.*.map.json
 # 本地属性文件（包含 SDK 路径等敏感/本地配置）
 /android/local.properties
 
+# IDE/工具本地状态（非项目产物，不入库）
+.flutter
+.flutter_tool_state
+
+# WorkBuddy 本地工作数据（记忆日志、功能备份副本）
+.workbuddy/
+
 # iOS 构建产物
 /ios/Flutter/ephemeral/
 /ios/Flutter/Flutter.framework

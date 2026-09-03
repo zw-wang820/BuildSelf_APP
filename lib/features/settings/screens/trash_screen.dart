@@ -139,6 +139,27 @@ class _TrashScreenState extends State<TrashScreen> {
         ));
       }
 
+      // KISS 复盘（整日复盘）
+      final reviewMaps = await _db.queryAll(
+        AppTables.reviewSessions,
+        where: 'user_id = ? AND deleted_at IS NOT NULL',
+        whereArgs: [userId],
+        orderBy: 'deleted_at DESC',
+      );
+      for (final m in reviewMaps) {
+        final date = m['review_date'] as String? ?? '';
+        final summary = m['summary'] as String? ?? '';
+        results.add(_TrashItem(
+          id: m['id'] as String,
+          title: date.isEmpty ? '(无日期复盘)' : '$date 复盘',
+          subtitle: summary.isEmpty ? '未生成总结' : summary,
+          moduleTag: 'KISS',
+          moduleColor: AppColors.reviewKeep,
+          table: AppTables.reviewSessions,
+          deletedAt: DateTime.parse(m['deleted_at'] as String),
+        ));
+      }
+
       // 按删除时间倒序
       results.sort((a, b) => b.deletedAt.compareTo(a.deletedAt));
 

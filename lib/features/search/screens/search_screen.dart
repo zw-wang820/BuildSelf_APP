@@ -7,6 +7,7 @@ import 'package:buildself/data/repositories/life_repository.dart';
 import 'package:buildself/data/repositories/goal_repository.dart';
 import 'package:buildself/data/repositories/murmur_repository.dart';
 import 'package:buildself/data/repositories/reading_repository.dart';
+import 'package:buildself/features/review/data/review_repository.dart';
 import 'package:buildself/features/auth/providers/app_provider.dart';
 import 'package:buildself/shared/widgets/app_card.dart';
 import 'package:buildself/shared/widgets/emoji_icon.dart';
@@ -35,6 +36,7 @@ class _SearchScreenState extends State<SearchScreen> {
   final GoalRepository _goalRepo = GoalRepository();
   final MurmurRepository _murmurRepo = MurmurRepository();
   final ReadingRepository _readingRepo = ReadingRepository();
+  final ReviewRepository _reviewRepo = ReviewRepository();
 
   List<_SearchResult> _results = [];
   bool _searching = false;
@@ -67,7 +69,7 @@ class _SearchScreenState extends State<SearchScreen> {
       case _SearchScope.reading:
         return '搜索书籍、作者、读书笔记…';
       default:
-        return '搜索工作 / 生活 / 目标 / 碎碎念…';
+        return '搜索工作 / 生活 / 目标 / 碎碎念 / 复盘…';
     }
   }
 
@@ -149,6 +151,7 @@ class _SearchScreenState extends State<SearchScreen> {
           _lifeRepo.search(userId, kw),
           _goalRepo.search(userId, kw),
           _murmurRepo.search(userId, kw),
+          _reviewRepo.searchByContent(userId, kw),
         ]);
 
         for (final n in futures[0] as List) {
@@ -189,6 +192,25 @@ class _SearchScreenState extends State<SearchScreen> {
             moduleColor: AppColors.murmur,
             date: m.createdAt,
             onTap: () => Navigator.pushNamed(context, AppRoutes.murmur),
+          ));
+        }
+        for (final rv in futures[4] as List) {
+          final c = rv.createdAt as DateTime;
+          final isToday = c.year == DateTime.now().year &&
+              c.month == DateTime.now().month &&
+              c.day == DateTime.now().day;
+          results.add(_SearchResult(
+            title: rv.content,
+            subtitle: '${rv.quadrant.zhLabel} · ${rv.quadrant.enLabel}',
+            moduleTag: 'KISS',
+            moduleColor: rv.quadrant.color,
+            date: c,
+            // 今日命中 → 打开今日可编辑复盘；历史命中 → 只读当日复盘
+            onTap: () => Navigator.pushNamed(
+              context,
+              AppRoutes.review,
+              arguments: isToday ? null : DateTime(c.year, c.month, c.day),
+            ),
           ));
         }
       }
@@ -309,6 +331,7 @@ class _SearchScreenState extends State<SearchScreen> {
           _ModuleHint(emoji: '🌿', label: '生活记录', tag: 'LIFE', color: AppColors.life),
           _ModuleHint(emoji: '🎯', label: '目标', tag: 'GOAL', color: AppColors.goal),
           _ModuleHint(emoji: '✨', label: '碎碎念', tag: 'MURMUR', color: AppColors.murmur),
+          _ModuleHint(emoji: '🔄', label: '每日复盘（按条目内容）', tag: 'KISS', color: AppColors.reviewStart),
         ];
     }
     return Padding(

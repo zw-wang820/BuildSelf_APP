@@ -226,8 +226,6 @@ class _HomeScreenState extends State<HomeScreen> {
               _buildActiveGoals(context),
               const SizedBox(height: 20),
               _buildReading(context),
-              const SizedBox(height: 20),
-              _buildReview(context),
             ],
           ),
         ),
@@ -411,14 +409,9 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  /// 快捷记录入口 — 四模块场景色
+  /// 快捷记录入口 — 四模块场景色（含 KISS 复盘）
   Widget _buildQuickRecords(BuildContext context) {
     final entries = [
-      _QuickEntry(
-          emoji: '💼',
-          label: AppStrings.tabWork,
-          color: AppColors.work,
-          route: AppRoutes.workEdit),
       _QuickEntry(
           emoji: '🌿',
           label: AppStrings.tabLife,
@@ -434,34 +427,39 @@ class _HomeScreenState extends State<HomeScreen> {
           label: AppStrings.murmurTitle,
           color: AppColors.murmur,
           route: AppRoutes.murmur),
+      _QuickEntry(
+          emoji: '🔄',
+          label: AppStrings.reviewShort,
+          color: AppColors.reviewStart,
+          route: AppRoutes.review),
     ];
 
     return Row(
       children: entries.map((e) {
         return Expanded(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 3),
             child: AppCard(
               accent: e.color,
               onTap: () => Navigator.pushNamed(context, e.route),
               padding:
-                  const EdgeInsets.symmetric(vertical: 16, horizontal: 6),
+                  const EdgeInsets.symmetric(vertical: 14, horizontal: 2),
               child: Column(
                 children: [
                   Container(
-                    width: 44,
-                    height: 44,
+                    width: 42,
+                    height: 42,
                     decoration: BoxDecoration(
                       color: e.color.withValues(alpha: 0.14),
                       shape: BoxShape.circle,
                     ),
-                    child: Center(child: EmojiIcon(e.emoji, size: 24)),
+                    child: Center(child: EmojiIcon(e.emoji, size: 22)),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 8),
                   Text(
                     e.label,
                     style: TextStyle(
-                      fontSize: 12,
+                      fontSize: 11.5,
                       fontWeight: FontWeight.w600,
                       color: e.color,
                     ),
@@ -839,39 +837,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  /// 今日复盘
-  Widget _buildReview(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildSectionHeader(
-          context,
-          emoji: '🔄',
-          label: '今日复盘',
-          accent: AppColors.accent,
-          actionLabel: '开始复盘',
-          onAction: () {},
-        ),
-        const SizedBox(height: 10),
-        AppCard(
-          accent: AppColors.accent,
-          onTap: null,
-          child: _buildReviewContent(),
-        ),
-      ],
-    );
-  }
-
-  /// 今日复盘内容 — 数据模型未建，先以空态呈现
-  Widget _buildReviewContent() {
-    return _buildEmptyState(
-      emoji: '🔄',
-      color: AppColors.accent,
-      text: '今日还没有复盘',
-      hint: '回顾今天的成长与反思',
-    );
-  }
-
   /// 通用空态 — 图标 + 标题 + 提示
   Widget _buildEmptyState({
     required String emoji,
@@ -987,9 +952,10 @@ class _QuickEntry {
   final Color color;
   final String route;
 
-  _QuickEntry(
-      {required this.emoji,
-      required this.label,
-      required this.color,
-      required this.route});
+  _QuickEntry({
+    required this.emoji,
+    required this.label,
+    required this.color,
+    required this.route,
+  });
 }

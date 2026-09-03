@@ -53,6 +53,10 @@ class AppRoutes {
   // 碎碎念模块
   static const String murmur = '/murmur';
 
+  // KISS 复盘模块
+  static const String review = '/review';
+  static const String reviewHistory = '/review/history';
+
   // 设置
   static const String settings = '/settings';
   static const String backup = '/settings/backup';

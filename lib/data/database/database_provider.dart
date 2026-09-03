@@ -147,6 +147,20 @@ class DatabaseProvider {
         "WHERE record_type IN ('反思','reflection')",
       );
     }
+    // v10: KISS 复盘模块 — 复盘实例表 + 四象限条目表
+    if (oldVersion < 10) {
+      await db.execute(AppSql.createReviewSessions);
+      await db.execute(AppSql.createReviewItems);
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_review_sessions_user_date ON ${AppTables.reviewSessions}(user_id, review_date)',
+      );
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_review_items_session ON ${AppTables.reviewItems}(session_id)',
+      );
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_review_items_quadrant ON ${AppTables.reviewItems}(quadrant)',
+      );
+    }
   }
 
   // ==================== 通用 CRUD 方法 ====================
@@ -294,6 +308,9 @@ class DatabaseProvider {
         where: 'deleted_at IS NOT NULL AND deleted_at < ?', whereArgs: [purgeBefore.toIso8601String()]);
     // 清理 todos
     await db.delete(AppTables.todos,
+        where: 'deleted_at IS NOT NULL AND deleted_at < ?', whereArgs: [purgeBefore.toIso8601String()]);
+    // 清理 review_sessions
+    await db.delete(AppTables.reviewSessions,
         where: 'deleted_at IS NOT NULL AND deleted_at < ?', whereArgs: [purgeBefore.toIso8601String()]);
 
     // 清理 trash_items

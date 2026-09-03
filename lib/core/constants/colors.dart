@@ -93,6 +93,21 @@ class AppColors {
   static const Color moodSad = Color(0xFF3B82F6);       // 蓝
   static const Color moodThink = Color(0xFF8B5CF6);     // 紫
 
+  // ========== KISS 复盘四象限 ==========
+  static const Color reviewKeep = Color(0xFF22C55E);    // green-500   保持
+  static const Color reviewImprove = Color(0xFF3B82F6); // blue-500    改进
+  static const Color reviewStart = Color(0xFF14B8A6);   // teal-500    开始
+  static const Color reviewStop = Color(0xFFEF4444);    // red-500     停止
+  // 浅底 + 深字（标签/徽章/象限头）
+  static const Color reviewKeepLight = Color(0xFFDCFCE7);
+  static const Color reviewKeepText = Color(0xFF15803D);
+  static const Color reviewImproveLight = Color(0xFFDBEAFE);
+  static const Color reviewImproveText = Color(0xFF1D4ED8);
+  static const Color reviewStartLight = Color(0xFFCCFBF1);
+  static const Color reviewStartText = Color(0xFF0F766E);
+  static const Color reviewStopLight = Color(0xFFFEE2E2);
+  static const Color reviewStopText = Color(0xFFB91C1C);
+
   // ========== 兼容旧代码的别名（勿删） ==========
   static const Color spaceDeep = Color(0xFF0B0F1A);
   static const Color spaceMid = Color(0xFF0B0F1A);

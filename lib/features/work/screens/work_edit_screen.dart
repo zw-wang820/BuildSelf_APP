@@ -7,6 +7,7 @@ import 'package:buildself/data/models/work_note_model.dart';
 import 'package:buildself/data/repositories/work_repository.dart';
 import 'package:buildself/features/auth/providers/app_provider.dart';
 import 'package:buildself/shared/widgets/emoji_icon.dart';
+import 'package:buildself/shared/widgets/markdown_editor.dart';
 import 'package:buildself/shared/widgets/tag_chip.dart';
 
 /// 工作记录编辑/新建页
@@ -218,10 +219,9 @@ class _WorkEditScreenState extends State<WorkEditScreen> {
           const SizedBox(height: 16),
           TextField(controller: _titleController, decoration: InputDecoration(hintText: AppStrings.titleOptional)),
           const SizedBox(height: 16),
-          TextField(
+          MarkdownEditor(
             controller: _contentController,
-            maxLines: 12,
-            decoration: InputDecoration(hintText: _contentHint()),
+            hint: _contentHint(),
           ),
           // 待学习项：完成状态开关
           if (_recordType == '待学习项') ...[

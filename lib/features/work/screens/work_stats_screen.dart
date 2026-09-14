@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:buildself/core/constants/colors.dart';
 import 'package:buildself/core/router/routes.dart';
+import 'package:buildself/core/utils/markdown_parser.dart';
 import 'package:buildself/data/models/work_note_model.dart';
 import 'package:buildself/data/repositories/work_repository.dart';
 import 'package:buildself/features/auth/providers/app_provider.dart';
@@ -461,7 +462,7 @@ class _WorkStatsScreenState extends State<WorkStatsScreen> {
                   const SizedBox(height: 2),
                 ],
                 Text(
-                  note.content,
+                  stripMarkdown(note.content),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(

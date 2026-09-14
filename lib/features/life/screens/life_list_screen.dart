@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:buildself/core/constants/colors.dart';
 import 'package:buildself/core/constants/strings.dart';
 import 'package:buildself/core/router/routes.dart';
+import 'package:buildself/core/utils/markdown_parser.dart';
 import 'package:buildself/data/models/life_record_model.dart';
 import 'package:buildself/data/repositories/life_repository.dart';
 import 'package:buildself/features/auth/providers/app_provider.dart';
@@ -10,6 +11,7 @@ import 'package:buildself/shared/layouts/main_scaffold.dart';
 import 'package:buildself/shared/widgets/app_card.dart';
 import 'package:buildself/shared/widgets/emoji_icon.dart';
 import 'package:buildself/shared/widgets/empty_state.dart';
+import 'package:buildself/shared/widgets/markdown_text.dart';
 import 'package:buildself/shared/widgets/nexus_background.dart';
 
 /// 生活记录列表页
@@ -219,7 +221,7 @@ class _LifeListScreenState extends State<LifeListScreen> {
           ],
           const SizedBox(height: 6),
           Text(
-            record.content,
+            stripMarkdown(record.content),
             maxLines: 3,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
@@ -393,9 +395,9 @@ class _LifeDetailSheet extends StatelessWidget {
           ],
 
           // 内容
-          Text(
+          MarkdownText(
             record.content,
-            style: TextStyle(
+            baseStyle: TextStyle(
               fontSize: 15,
               color: AppColors.textPrimary(context),
               height: 1.6,

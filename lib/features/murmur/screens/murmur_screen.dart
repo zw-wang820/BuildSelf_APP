@@ -8,6 +8,7 @@ import 'package:buildself/data/repositories/murmur_repository.dart';
 import 'package:buildself/features/auth/providers/app_provider.dart';
 import 'package:buildself/shared/widgets/app_card.dart';
 import 'package:buildself/shared/widgets/empty_state.dart';
+import 'package:buildself/shared/widgets/markdown_text.dart';
 import 'package:buildself/shared/widgets/mood_selector.dart';
 import 'package:buildself/shared/widgets/nexus_background.dart';
 
@@ -293,9 +294,9 @@ class _MurmurScreenState extends State<MurmurScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
+            MarkdownText(
               murmur.content,
-              style: TextStyle(
+              baseStyle: TextStyle(
                 fontSize: 14,
                 color: AppColors.textPrimary(context),
                 height: 1.5,

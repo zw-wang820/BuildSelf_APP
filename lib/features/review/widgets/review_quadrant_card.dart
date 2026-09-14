@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:buildself/core/constants/app_constants.dart';
 import 'package:buildself/core/constants/colors.dart';
 import 'package:buildself/core/constants/strings.dart';
+import 'package:buildself/core/utils/markdown_parser.dart';
 import 'package:buildself/features/review/models/review_item.dart';
 import 'package:buildself/features/review/models/review_quadrant.dart';
 import 'package:buildself/features/review/widgets/review_item_tile.dart';
@@ -361,7 +362,7 @@ class _ReviewQuadrantCardState extends State<ReviewQuadrantCard> {
             Padding(
               padding: const EdgeInsets.all(14),
               child: Text(
-                item.content,
+                stripMarkdown(item.content),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:buildself/core/constants/colors.dart';
 import 'package:buildself/core/constants/strings.dart';
 import 'package:buildself/core/router/routes.dart';
+import 'package:buildself/core/utils/markdown_parser.dart';
 import 'package:buildself/features/auth/providers/app_provider.dart';
 import 'package:buildself/features/review/data/review_repository.dart';
 import 'package:buildself/features/review/models/review_quadrant.dart';
@@ -227,7 +228,7 @@ class _ReviewHistoryScreenState extends State<ReviewHistoryScreen> {
                       if (s.summary != null) ...[
                         const SizedBox(height: 4),
                         Text(
-                          s.summary!,
+                          stripMarkdown(s.summary!),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(

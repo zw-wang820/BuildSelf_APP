@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:buildself/core/constants/colors.dart';
+import 'package:buildself/core/utils/markdown_parser.dart';
 import 'package:buildself/data/models/life_record_model.dart';
 import 'package:buildself/data/repositories/life_repository.dart';
 import 'package:buildself/features/auth/providers/app_provider.dart';
 import 'package:buildself/shared/widgets/app_card.dart';
+import 'package:buildself/shared/widgets/markdown_text.dart';
 import 'package:buildself/shared/widgets/nexus_background.dart';
 
 /// 时间窗口类型
@@ -432,7 +434,7 @@ class _LifeStatsScreenState extends State<LifeStatsScreen> {
                   const SizedBox(height: 2),
                 ],
                 Text(
-                  record.content,
+                  stripMarkdown(record.content),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
@@ -501,9 +503,9 @@ class _LifeStatsScreenState extends State<LifeStatsScreen> {
                 ),
               ],
               const SizedBox(height: 10),
-              Text(
+              MarkdownText(
                 record.content,
-                style: const TextStyle(fontSize: 14, height: 1.7),
+                baseStyle: const TextStyle(fontSize: 14, height: 1.7),
               ),
             ],
           ),

@@ -38,13 +38,17 @@
 
 | 期 | 内容 | 状态 |
 |---|---|---|
-| Phase 1 | 核心组件（parser + MarkdownText + MarkdownEditor）+ 工作笔记接入 | 本期 |
-| Phase 2 | 阅读笔记、目标描述 | 待开始 |
-| Phase 3 | review 四象限、murmur、生活 moments | 待开始 |
+| Phase 1 | 核心组件（parser + MarkdownText + MarkdownEditor）+ 工作笔记接入 | ✅ 已提交（`97c40ed`） |
+| Phase 2 | 阅读笔记、目标描述接入 + 摘要 `$1` 修复 + 工具栏标签调整 | ✅ 已提交（`69747a1`） |
+| Phase 3 | 生活 moments、murmur、复盘 review 接入 | 本期 |
 
 接入原则：
 - 只接**长文本内容字段**；标题/名称类字段不接
 - 列表页摘要显示纯文本（剥离 `#`/`*`/`` ` `` 等符号），避免符号噪音
+- **短文本快记字段不接编辑器**（保持快记体验），但展示侧仍走 Markdown 渲染：
+  - 碎碎念输入框（2 行速记）：不加工具栏；展示区用 `MarkdownText`
+  - 复盘四象限 inline 添加框：不加工具栏；条目展示用 `stripMarkdown`
+  - 复盘「当日总结」（系统生成的 markdown）：用 `SelectionArea + MarkdownText` 渲染，保留可选中复制能力
 
 ## 五、数据层
 

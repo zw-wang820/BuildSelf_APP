@@ -11,6 +11,7 @@ import 'package:buildself/features/review/models/review_item.dart';
 import 'package:buildself/features/review/models/review_quadrant.dart';
 import 'package:buildself/features/review/models/review_session.dart';
 import 'package:buildself/features/review/widgets/review_quadrant_card.dart';
+import 'package:buildself/shared/widgets/markdown_text.dart';
 import 'package:buildself/shared/widgets/toast.dart';
 
 /// KISS 复盘主屏 — 1×4 纵向全宽四象限
@@ -246,14 +247,17 @@ class _ReviewScreenState extends State<ReviewScreen> {
             const SizedBox(height: 8),
             Flexible(
               child: SingleChildScrollView(
-                child: SelectableText(
-                  summary,
-                  style: TextStyle(
-                    fontSize: 13.5,
-                    height: 1.55,
-                    color: Theme.of(ctx).brightness == Brightness.dark
-                        ? const Color(0xFFE2E8F0)
-                        : const Color(0xFF0F172A),
+                // SelectionArea：保留复制能力；MarkdownText：按 markdown 渲染
+                child: SelectionArea(
+                  child: MarkdownText(
+                    summary,
+                    baseStyle: TextStyle(
+                      fontSize: 13.5,
+                      height: 1.55,
+                      color: Theme.of(ctx).brightness == Brightness.dark
+                          ? const Color(0xFFE2E8F0)
+                          : const Color(0xFF0F172A),
+                    ),
                   ),
                 ),
               ),
@@ -446,12 +450,14 @@ class _ReviewScreenState extends State<ReviewScreen> {
                   ],
                 ),
                 const SizedBox(height: 6),
-                SelectableText(
-                  session!.summary!,
-                  style: TextStyle(
-                    fontSize: 12.5,
-                    height: 1.5,
-                    color: AppColors.textSecondary(context),
+                SelectionArea(
+                  child: MarkdownText(
+                    session!.summary!,
+                    baseStyle: TextStyle(
+                      fontSize: 12.5,
+                      height: 1.5,
+                      color: AppColors.textSecondary(context),
+                    ),
                   ),
                 ),
               ],

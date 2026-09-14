@@ -6,6 +6,7 @@ import 'package:buildself/data/models/enums.dart';
 import 'package:buildself/data/models/life_record_model.dart';
 import 'package:buildself/data/repositories/life_repository.dart';
 import 'package:buildself/features/auth/providers/app_provider.dart';
+import 'package:buildself/shared/widgets/markdown_editor.dart';
 import 'package:buildself/shared/widgets/mood_selector.dart';
 
 /// 生活记录编辑/新建页
@@ -190,10 +191,10 @@ class _LifeEditScreenState extends State<LifeEditScreen> {
               decoration: InputDecoration(hintText: AppStrings.titleOptional),
             ),
             const SizedBox(height: 16),
-            TextField(
+            MarkdownEditor(
               controller: _contentController,
               maxLines: 10,
-              decoration: const InputDecoration(hintText: '记录生活中的美好与感悟...'),
+              hint: '记录生活中的美好与感悟...',
             ),
             const SizedBox(height: 16),
 

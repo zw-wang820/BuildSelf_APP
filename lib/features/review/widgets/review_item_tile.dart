@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:buildself/core/constants/colors.dart';
+import 'package:buildself/core/utils/markdown_parser.dart';
 import 'package:buildself/features/review/models/review_item.dart';
 import 'package:buildself/features/review/models/review_quadrant.dart';
 
@@ -49,7 +50,7 @@ class ReviewItemTile extends StatelessWidget {
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                item.content,
+                stripMarkdown(item.content),
                 style: TextStyle(
                   fontSize: 13.5,
                   height: 1.35,

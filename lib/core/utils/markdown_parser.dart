@@ -87,6 +87,8 @@ final RegExp _inlineRe = RegExp(
 final RegExp _linkRe = RegExp(r'^\[([^\]]+)\]\(([^)]+)\)$');
 final RegExp _headingRe = RegExp(r'^(#{1,6})\s+(.*)$');
 final RegExp _dividerRe = RegExp(r'^\s*([-*_])\s*(?:\1\s*){2,}$');
+final RegExp _dividerReMultiline =
+    RegExp(r'^\s*([-*_])\s*(?:\1\s*){2,}$', multiLine: true);
 final RegExp _bulletRe = RegExp(r'^(\s*)[-*]\s+(.*)$');
 final RegExp _orderedRe = RegExp(r'^(\s*)(\d{1,3})[.、]\s+(.*)$');
 final RegExp _quoteRe = RegExp(r'^\s*>\s?(.*)$');
@@ -258,18 +260,19 @@ List<MarkdownSpan> parseInline(String input,
   return spans;
 }
 
-/// 剥离 Markdown 语法标记，用于列表页纯文本摘要
+/// 剥离 Markdown 语法标记，用于列表页纯文本摘要。
+/// 注意：涉及捕获组回填必须用 replaceAllMapped —— Dart 的 replaceAll
+/// 不支持 `$1` 分组插值（会把 `$1` 当字面量输出）。
 String stripMarkdown(String src) {
-  final s = src
-      .replaceAll(RegExp(r'```[\s\S]*?```'), ' ')
-      .replaceAll(RegExp(r'`([^`]*)`'), r'$1')
-      .replaceAll(RegExp(r'\[([^\]\n]+)\]\(([^)\n]+)\)'), r'$1')
-      .replaceAll(RegExp(r'^\s{0,3}#{1,6}\s+', multiLine: true), '')
-      .replaceAll(RegExp(r'^\s{0,3}>\s?', multiLine: true), '')
-      .replaceAll(RegExp(r'^\s{0,3}[-*]\s+', multiLine: true), '• ')
-      .replaceAll(RegExp(r'^\s{0,3}(\d{1,3})[.、]\s+', multiLine: true), '')
-      .replaceAll(RegExp(r'\*\*([^*]+)\*\*'), r'$1')
-      .replaceAll(RegExp(r'\*([^*]+)\*'), r'$1')
-      .replaceAll(_dividerRe, '———');
+  var s = src.replaceAll(RegExp(r'```[\s\S]*?```'), ' ');
+  s = s.replaceAllMapped(RegExp(r'`([^`]*)`'), (m) => m.group(1)!);
+  s = s.replaceAllMapped(
+      RegExp(r'\[([^\]\n]+)\]\(([^)\n]+)\)'), (m) => m.group(1)!);
+  s = s.replaceAll(RegExp(r'^\s{0,3}#{1,6}\s+', multiLine: true), '');
+  s = s.replaceAll(RegExp(r'^\s{0,3}>\s?', multiLine: true), '');
+  s = s.replaceAll(RegExp(r'^\s{0,3}[-*]\s+', multiLine: true), '• ');
+  s = s.replaceAll(_dividerReMultiline, '———');
+  s = s.replaceAllMapped(RegExp(r'\*\*([^*]+)\*\*'), (m) => m.group(1)!);
+  s = s.replaceAllMapped(RegExp(r'\*([^*]+)\*'), (m) => m.group(1)!);
   return s.trim();
 }

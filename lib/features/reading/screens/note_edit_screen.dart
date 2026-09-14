@@ -4,6 +4,7 @@ import 'package:buildself/core/constants/strings.dart';
 import 'package:buildself/data/models/enums.dart';
 import 'package:buildself/data/models/reading_models.dart';
 import 'package:buildself/data/repositories/reading_repository.dart';
+import 'package:buildself/shared/widgets/markdown_editor.dart';
 
 /// 读书笔记编辑参数
 class NoteEditArgs {
@@ -162,12 +163,10 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
             const SizedBox(height: 16),
 
             // 内容
-            TextField(
+            MarkdownEditor(
               controller: _contentController,
               maxLines: 15,
-              decoration: InputDecoration(
-                hintText: _getHintByType(_noteType),
-              ),
+              hint: _getHintByType(_noteType),
             ),
           ],
         ),

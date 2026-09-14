@@ -46,6 +46,21 @@ class _MarkdownEditorState extends State<MarkdownEditor> {
     );
   }
 
+  /// 插入分隔线：保证 `---` 独占一行，光标落到下一行
+  void _insertDivider() {
+    final text = widget.controller.text;
+    final sel = widget.controller.selection;
+    final cursor = (sel.isValid && sel.start >= 0) ? sel.start : text.length;
+    final before = text.substring(0, cursor);
+    final after = text.substring(cursor);
+    final prefix = (before.isEmpty || before.endsWith('\n')) ? '' : '\n';
+    final insert = '$prefix---\n';
+    widget.controller.value = TextEditingValue(
+      text: before + insert + after,
+      selection: TextSelection.collapsed(offset: cursor + insert.length),
+    );
+  }
+
   /// 包裹选中文字（粗体 / 斜体 / 行内代码）
   void _wrapSelection(String prefix, String suffix) {
     final text = widget.controller.text;
@@ -165,14 +180,18 @@ class _MarkdownEditorState extends State<MarkdownEditor> {
                         onTap: () => _insertLinePrefix('1. '),
                       ),
                       _toolBtn(
-                        label: '❝',
+                        label: '>',
+                        style: const TextStyle(
+                            fontFamily: 'monospace',
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14),
                         onTap: () => _insertLinePrefix('> '),
                       ),
                       _toolBtn(
-                        label: '<>',
+                        label: '---',
                         style: const TextStyle(
                             fontFamily: 'monospace', fontSize: 13),
-                        onTap: () => _wrapSelection('`', '`'),
+                        onTap: _insertDivider,
                       ),
                       const SizedBox(width: 4),
                       TextButton.icon(

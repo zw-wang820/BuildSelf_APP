@@ -7,6 +7,7 @@ import 'package:buildself/data/models/goal_model.dart';
 import 'package:buildself/data/repositories/goal_repository.dart';
 import 'package:buildself/features/auth/providers/app_provider.dart';
 import 'package:buildself/shared/widgets/emoji_icon.dart';
+import 'package:buildself/shared/widgets/markdown_editor.dart';
 
 /// 目标编辑/新建页 — goal 非空时为编辑模式
 class GoalEditScreen extends StatefulWidget {
@@ -166,10 +167,11 @@ class _GoalEditScreenState extends State<GoalEditScreen> {
             const SizedBox(height: 16),
 
             // 目标描述
-            TextField(
+            MarkdownEditor(
               controller: _descController,
-              maxLines: 3,
-              decoration: const InputDecoration(hintText: '目标描述（选填）'),
+              maxLines: 6,
+              minLines: 2,
+              hint: '目标描述（选填）',
             ),
             const SizedBox(height: 16),
 

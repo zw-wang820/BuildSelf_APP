@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:buildself/core/constants/colors.dart';
 import 'package:buildself/core/constants/strings.dart';
 import 'package:buildself/core/router/routes.dart';
+import 'package:buildself/core/utils/markdown_parser.dart';
 import 'package:buildself/data/models/enums.dart';
 import 'package:buildself/data/models/reading_models.dart';
 import 'package:buildself/data/repositories/reading_repository.dart';
@@ -679,7 +680,7 @@ class _NotesListState extends State<_NotesList> with AutomaticKeepAliveClientMix
               ),
               const SizedBox(height: 8),
               Text(
-                note.content,
+                stripMarkdown(note.content),
                 maxLines: 6,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(fontSize: 14, height: 1.5),

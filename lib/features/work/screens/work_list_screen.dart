@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:buildself/core/constants/colors.dart';
 import 'package:buildself/core/constants/strings.dart';
 import 'package:buildself/core/router/routes.dart';
+import 'package:buildself/core/utils/markdown_parser.dart';
 import 'package:buildself/data/models/enums.dart';
 import 'package:buildself/data/models/work_note_model.dart';
 import 'package:buildself/data/repositories/work_repository.dart';
@@ -238,7 +239,7 @@ class _WorkListScreenState extends State<WorkListScreen> {
           ],
           const SizedBox(height: 6),
           Text(
-            note.content,
+            stripMarkdown(note.content),
             maxLines: 3,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(

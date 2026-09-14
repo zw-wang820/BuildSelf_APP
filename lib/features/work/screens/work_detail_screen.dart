@@ -6,6 +6,7 @@ import 'package:buildself/data/models/work_note_model.dart';
 import 'package:buildself/data/repositories/work_repository.dart';
 import 'package:buildself/shared/widgets/emoji_icon.dart';
 import 'package:buildself/shared/widgets/empty_state.dart';
+import 'package:buildself/shared/widgets/markdown_text.dart';
 import 'package:buildself/shared/widgets/tag_chip.dart';
 
 /// 工作记录详情页
@@ -125,7 +126,10 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         const SizedBox(height: 16),
         const Divider(),
         const SizedBox(height: 16),
-        Text(note.content, style: const TextStyle(fontSize: 15, height: 1.8)),
+        MarkdownText(
+          note.content,
+          baseStyle: const TextStyle(fontSize: 15, height: 1.8),
+        ),
         if (note.tags.isNotEmpty) ...[
           const SizedBox(height: 24),
           Wrap(spacing: 8, runSpacing: 8, children: note.tags.map((tag) => TagChip(label: tag)).toList()),

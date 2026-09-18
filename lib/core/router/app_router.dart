@@ -10,8 +10,10 @@ import 'package:buildself/features/work/screens/work_edit_screen.dart';
 import 'package:buildself/features/work/screens/work_stats_screen.dart';
 import 'package:buildself/data/models/work_note_model.dart';
 import 'package:buildself/data/models/goal_model.dart';
+import 'package:buildself/data/models/life_record_model.dart';
 import 'package:buildself/data/models/reading_models.dart';
 import 'package:buildself/features/life/screens/life_list_screen.dart';
+import 'package:buildself/features/life/screens/life_detail_screen.dart';
 import 'package:buildself/features/life/screens/life_edit_screen.dart';
 import 'package:buildself/features/life/screens/life_stats_screen.dart';
 import 'package:buildself/features/goal/screens/goal_board_screen.dart';
@@ -80,8 +82,12 @@ class AppRouter {
       // 生活模块
       case AppRoutes.lifeList:
         return _buildRoute(const LifeListScreen(), settings);
+      case AppRoutes.lifeDetail:
+        final id = settings.arguments as String?;
+        return _buildRoute(LifeDetailScreen(recordId: id), settings);
       case AppRoutes.lifeEdit:
-        return _buildRoute(const LifeEditScreen(), settings);
+        final record = settings.arguments as LifeRecord?;
+        return _buildRoute(LifeEditScreen(record: record), settings);
       case AppRoutes.lifeStats:
         return _buildRoute(const LifeStatsScreen(), settings);
 

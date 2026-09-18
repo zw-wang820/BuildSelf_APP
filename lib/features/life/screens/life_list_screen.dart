@@ -11,7 +11,6 @@ import 'package:buildself/shared/layouts/main_scaffold.dart';
 import 'package:buildself/shared/widgets/app_card.dart';
 import 'package:buildself/shared/widgets/emoji_icon.dart';
 import 'package:buildself/shared/widgets/empty_state.dart';
-import 'package:buildself/shared/widgets/markdown_text.dart';
 import 'package:buildself/shared/widgets/nexus_background.dart';
 
 /// 生活记录列表页
@@ -168,113 +167,130 @@ class _LifeListScreenState extends State<LifeListScreen> {
   Widget _buildRecordCard(LifeRecord record) {
     final color = AppColors.life;
 
-    return AppCard(
-      accent: color,
-      margin: const EdgeInsets.only(bottom: 10),
-      onTap: () => _showDetailSheet(record),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.16),
-                  borderRadius: BorderRadius.circular(4),
-                  border: Border.all(color: color.withOpacity(0.5), width: 0.6),
-                ),
-                child: Text(
-                  record.recordType,
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: color,
-                    fontWeight: FontWeight.w700,
+    // 外层 GestureDetector 仅接管长按（删除），点击仍走 AppCard 的 onTap（进详情页）
+    return GestureDetector(
+      onLongPress: () => _confirmDelete(record),
+      child: AppCard(
+        accent: color,
+        margin: const EdgeInsets.only(bottom: 10),
+        onTap: () async {
+          await Navigator.pushNamed(context, AppRoutes.lifeDetail,
+              arguments: record.id);
+          _loadCategories();
+          _loadData();
+        },
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.16),
+                    borderRadius: BorderRadius.circular(4),
+                    border: Border.all(color: color.withOpacity(0.5), width: 0.6),
+                  ),
+                  child: Text(
+                    record.recordType,
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: color,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
-              ),
-              if (record.mood != null) ...[
-                const SizedBox(width: 8),
-                Text(record.mood!.emoji, style: const TextStyle(fontSize: 14)),
+                if (record.mood != null) ...[
+                  const SizedBox(width: 8),
+                  Text(record.mood!.emoji, style: const TextStyle(fontSize: 14)),
+                ],
+                const Spacer(),
+                Text(
+                  _formatDate(record.createdAt),
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: AppColors.textSecondary(context),
+                    letterSpacing: 0.5,
+                  ),
+                ),
               ],
-              const Spacer(),
+            ),
+            if (record.title.isNotEmpty) ...[
+              const SizedBox(height: 8),
               Text(
-                _formatDate(record.createdAt),
+                record.title,
                 style: TextStyle(
-                  fontSize: 11,
-                  color: AppColors.textSecondary(context),
-                  letterSpacing: 0.5,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary(context),
                 ),
               ),
             ],
-          ),
-          if (record.title.isNotEmpty) ...[
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             Text(
-              record.title,
+              stripMarkdown(record.content),
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary(context),
+                fontSize: 14,
+                color: AppColors.textSecondary(context),
+                height: 1.5,
+                letterSpacing: 0.3,
               ),
             ),
-          ],
-          const SizedBox(height: 6),
-          Text(
-            stripMarkdown(record.content),
-            maxLines: 3,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 14,
-              color: AppColors.textSecondary(context),
-              height: 1.5,
-              letterSpacing: 0.3,
-            ),
-          ),
-          if (record.location != null && record.location!.isNotEmpty) ...[
-            const SizedBox(height: 6),
-            Row(
-              children: [
-                Icon(Icons.location_on_outlined, size: 14, color: color.withOpacity(0.7)),
-                const SizedBox(width: 4),
-                Expanded(
-                  child: Text(
-                    record.location!,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: AppColors.textSecondary(context),
-                      letterSpacing: 0.2,
+            if (record.location != null && record.location!.isNotEmpty) ...[
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  Icon(Icons.location_on_outlined, size: 14, color: color.withOpacity(0.7)),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      record.location!,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppColors.textSecondary(context),
+                        letterSpacing: 0.2,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                   ),
-                ),
-              ],
-            ),
+                ],
+              ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
 
-  void _showDetailSheet(LifeRecord record) {
-    showModalBottomSheet(
+  /// 长按删除 — 二次确认后移入回收站（回收站 30 天后自动清理）
+  Future<void> _confirmDelete(LifeRecord record) async {
+    final ok = await showDialog<bool>(
       context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      builder: (context) => AlertDialog(
+        title: const Text('删除记录'),
+        content: const Text('确定删除这条记录吗？删除后可在回收站恢复，30天后永久清除。'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(AppStrings.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: AppColors.error),
+            child: Text(AppStrings.delete),
+          ),
+        ],
       ),
-      builder: (context) {
-        return DraggableScrollableSheet(
-          initialChildSize: 0.6,
-          minChildSize: 0.3,
-          maxChildSize: 0.9,
-          expand: false,
-          builder: (context, scrollController) {
-            return _LifeDetailSheet(record: record);
-          },
-        );
-      },
+    );
+    if (ok != true || !mounted) return;
+    await _repo.softDelete(record.id);
+    if (!mounted) return;
+    _loadData();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(AppStrings.deleteSuccess)),
     );
   }
 
@@ -317,126 +333,4 @@ class _LifeListScreenState extends State<LifeListScreen> {
       ),
     );
   }
-}
-
-/// 生活记录详情 BottomSheet
-class _LifeDetailSheet extends StatelessWidget {
-  final LifeRecord record;
-
-  const _LifeDetailSheet({Key? key, required this.record}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    final color = AppColors.life;
-
-    return SingleChildScrollView(
-      controller: PrimaryScrollController.of(context),
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 拖动条
-          Center(
-            child: Container(
-              width: 36,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.textSecondary(context).withOpacity(0.3),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // 类型标签
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.16),
-                  borderRadius: BorderRadius.circular(4),
-                  border: Border.all(color: color.withOpacity(0.5), width: 0.6),
-                ),
-                child: Text(
-                  record.recordType,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: color,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-              const Spacer(),
-              Text(
-                _formatFullDate(record.createdAt),
-                style: TextStyle(
-                  fontSize: 11,
-                  color: AppColors.textSecondary(context),
-                  letterSpacing: 0.5,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-
-          // 标题
-          if (record.title.isNotEmpty) ...[
-            Text(
-              record.title,
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w800,
-                color: AppColors.textPrimary(context),
-                letterSpacing: 0.3,
-              ),
-            ),
-            const SizedBox(height: 8),
-          ],
-
-          // 内容
-          MarkdownText(
-            record.content,
-            baseStyle: TextStyle(
-              fontSize: 15,
-              color: AppColors.textPrimary(context),
-              height: 1.6,
-              letterSpacing: 0.3,
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // 元信息
-          if (record.mood != null || (record.location != null && record.location!.isNotEmpty)) ...[
-            Divider(color: AppColors.dividerDark, height: 1),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                if (record.mood != null) ...[
-                  Text('${record.mood!.emoji} ${record.mood!.label}',
-                      style: TextStyle(fontSize: 13, color: AppColors.textSecondary(context))),
-                  const SizedBox(width: 16),
-                ],
-                if (record.location != null && record.location!.isNotEmpty) ...[
-                  Icon(Icons.location_on_outlined, size: 14, color: color.withOpacity(0.7)),
-                  const SizedBox(width: 4),
-                  Expanded(
-                    child: Text(record.location!,
-                        style: TextStyle(fontSize: 13, color: AppColors.textSecondary(context)),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis),
-                  ),
-                ],
-              ],
-            ),
-            const SizedBox(height: 8),
-          ],
-        ],
-      ),
-    );
-  }
-
-  String _formatFullDate(DateTime d) =>
-      '${d.year}.${d.month.toString().padLeft(2, '0')}.${d.day.toString().padLeft(2, '0')} '
-      '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
 }

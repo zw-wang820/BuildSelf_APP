@@ -11,7 +11,10 @@ import 'package:buildself/shared/widgets/mood_selector.dart';
 
 /// 生活记录编辑/新建页
 class LifeEditScreen extends StatefulWidget {
-  const LifeEditScreen({Key? key}) : super(key: key);
+  /// 传入则为编辑模式
+  final LifeRecord? record;
+
+  const LifeEditScreen({Key? key, this.record}) : super(key: key);
 
   @override
   State<LifeEditScreen> createState() => _LifeEditScreenState();
@@ -19,6 +22,9 @@ class LifeEditScreen extends StatefulWidget {
 
 class _LifeEditScreenState extends State<LifeEditScreen> {
   final LifeRepository _repo = LifeRepository();
+
+  bool get _isEditing => widget.record != null;
+
   late String _recordType;
   List<String> _categories = [];
   final _titleController = TextEditingController();
@@ -31,6 +37,15 @@ class _LifeEditScreenState extends State<LifeEditScreen> {
   void initState() {
     super.initState();
     _recordType = '美好';
+    // 编辑模式：回填原内容
+    final record = widget.record;
+    if (record != null) {
+      _titleController.text = record.title;
+      _contentController.text = record.content;
+      _recordType = record.recordType;
+      _mood = record.mood;
+      if (record.location != null) _locationController.text = record.location!;
+    }
     _loadCategories();
   }
 
@@ -97,16 +112,30 @@ class _LifeEditScreenState extends State<LifeEditScreen> {
     setState(() => _saving = true);
 
     try {
-      await _repo.create(
-        userId: userId,
-        title: _titleController.text.trim(),
-        content: _contentController.text.trim(),
-        recordType: _recordType,
-        mood: _mood,
-        location: _locationController.text.trim().isEmpty
-            ? null
-            : _locationController.text.trim(),
-      );
+      if (_isEditing) {
+        // 编辑：images/tags 等未在表单中出现的字段随 record 原样保留
+        final record = widget.record!;
+        record
+          ..title = _titleController.text.trim()
+          ..content = _contentController.text.trim()
+          ..recordType = _recordType
+          ..mood = _mood
+          ..location = _locationController.text.trim().isEmpty
+              ? null
+              : _locationController.text.trim();
+        await _repo.update(record);
+      } else {
+        await _repo.create(
+          userId: userId,
+          title: _titleController.text.trim(),
+          content: _contentController.text.trim(),
+          recordType: _recordType,
+          mood: _mood,
+          location: _locationController.text.trim().isEmpty
+              ? null
+              : _locationController.text.trim(),
+        );
+      }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -134,7 +163,7 @@ class _LifeEditScreenState extends State<LifeEditScreen> {
           onPressed: _saving ? null : () => Navigator.pop(context),
           child: Text(AppStrings.cancel),
         ),
-        title: Text(AppStrings.newLifeRecord),
+        title: Text(_isEditing ? AppStrings.edit : AppStrings.newLifeRecord),
         actions: [
           TextButton(
             onPressed: _saving ? null : _save,
